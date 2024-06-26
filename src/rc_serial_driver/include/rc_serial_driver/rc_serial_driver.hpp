@@ -21,7 +21,7 @@
 #include <thread>
 #include <vector>
 
-#include "auto_aim_interfaces/msg/target.hpp"
+//#include "auto_aim_interfaces/msg/target.hpp"
 
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>

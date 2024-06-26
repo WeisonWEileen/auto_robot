@@ -1,7 +1,9 @@
 image: RC2024.pgm
 mode: trinary
-resolution: 0.05
-origin: [0, 0, 0]
+resolution: 0.049
+#x为12m方向 负数r2相对地图向前 世界坐标  右下角为原点
+origin: [-0.38, -5.475, 0]
+#origin: [-0.3, -0.5, 0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.25

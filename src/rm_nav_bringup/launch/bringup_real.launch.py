@@ -137,6 +137,14 @@ def generate_launch_description():
         output='screen'
     )
 
+    # 修改：添加静态变换发布节点 启动区R2呈45
+    static_transform_publisher_node = Node(
+    package='tf2_ros',
+    executable='static_transform_publisher',
+    name='static_tf_pub_map_to_odom',
+    arguments=['0', '0', '0', '0.38268343', '0', '-0.92387953', 'map', 'odom']
+    )
+
     # Specify the actions
     start_livox_ros_driver2_node = Node(
         package='livox_ros_driver2',
@@ -357,6 +365,9 @@ def generate_launch_description():
     ld.add_action(declare_LIO_cmd)
     
     ld.add_action(start_robot_state_publisher_cmd)
+
+    ld.add_action(static_transform_publisher_node)
+
     ld.add_action(start_livox_ros_driver2_node)
     ld.add_action(bringup_imu_complementary_filter_node)
     ld.add_action(bringup_linefit_ground_segmentation_node)

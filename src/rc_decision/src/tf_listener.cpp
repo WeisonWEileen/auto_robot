@@ -15,8 +15,7 @@ public:
     {
         // Prediction
         double x_hat_minus = x_hat_;
-        double P_minus = P_ + Q_;
-
+        double P_minus = P_ + Q_;·
         // Update
         double K = P_minus / (P_minus + R_);
         x_hat_ = x_hat_minus + K * (measurement - x_hat_minus);

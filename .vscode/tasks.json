@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "label": "build detector package",
+            "detail": "Build ROS 2 workspace",
+            "type": "shell",
+            "command": "colcon build --symlink-install --packages-select rc_controller",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        }
+	]
+}

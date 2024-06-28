@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/weison/Desktop/auto_robo/install/rc_state_collector/include/**",
+        "/home/weison/Desktop/rc_opencv/install/rc_vision_bringup/include/**",
+        "/home/weison/Desktop/rc_opencv/install/rc_serial_driver/include/**",
+        "/home/weison/Desktop/rc_opencv/install/rc_decision/include/**",
+        "/home/weison/Desktop/rc_opencv/install/armor_detector/include/**",
+        "/home/weison/Desktop/rc_opencv/install/yolov8_msgs/include/**",
+        "/home/weison/Desktop/rc_opencv/install/v4l2_camera/include/**",
+        "/home/weison/Desktop/rc_opencv/install/auto_aim_interfaces/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/weison/Desktop/auto_robo/src/rc_controller/include/**",
+        "/home/weison/Desktop/auto_robo/src/rc_serial_driver/include/**",
+        "/home/weison/Desktop/auto_robo/src/rc_state_collector/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_localization/FAST_LIO/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_localization/icp_registration/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_localization/point_lio/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_navigation/costmap_converter/costmap_converter/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_navigation/fake_vel_transform/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_navigation/teb_local_planner/teb_local_planner/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_perception/imu_complementary_filter/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_perception/linefit_ground_segementation_ros2/linefit_ground_segmentation/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_perception/pointcloud_to_laserscan/include/**",
+        "/home/weison/Desktop/auto_robo/src/rm_simulation/livox_laser_simulation_RO2/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

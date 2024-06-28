@@ -17,6 +17,11 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   DIRECTORY src
 )
 
+# rclcpp_components_register_node(${PROJECT_NAME}
+#   PLUGIN rc_controller::PoseControllerNode
+#   EXECUTABLE posecontrollerNode
+# )
+
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN rc_controller::PoseControllerNode
   EXECUTABLE posecontrollerNode
@@ -38,4 +43,5 @@ endif()
 ament_auto_package(
   INSTALL_TO_SHARE
   launch
+  include 
 )

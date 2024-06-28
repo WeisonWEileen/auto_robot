@@ -18,8 +18,8 @@ public:
   double pidCalculate(double desire_value);
   void setMeasure(double measure);
 
-private:
   double measure_ = 0.0;
+private:
   double last_measure_ = 0.0;
   double err_ = 0.0;
   double last_err_ = 0.0;
@@ -38,7 +38,7 @@ private:
   double maxOut_;
   double integral_lim_;
 
-  double output_;
+  double output_ = 0.0;
 };
 
 //@TODO 目前的计算是desire value 和 current value
@@ -72,6 +72,8 @@ private:
       poseCommand_sub_;
   void poseCommand_callback(
       const geometry_msgs::msg::PoseStamped::ConstSharedPtr msg);
+
+  int scale_factor_;
 };
 //         rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr
 //         cmd_pid_publisher_;

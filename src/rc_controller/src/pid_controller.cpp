@@ -8,14 +8,16 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
 
   init_PID();
 
+  // Fastlio
   //订阅当前位姿信息
   poseUpdate_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
       "/Odometry", rclcpp::SensorDataQoS(),
       std::bind(&PoseControllerNode::poseUpdate_callback, this,
                 std::placeholders::_1));
-  //订阅目标位姿信息
+  // State
+  // 订阅目标位姿信息
   poseCommand_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-      "/rc_decision/target", rclcpp::SensorDataQoS(),
+      "/rc/decision", rclcpp::SensorDataQoS(),
       std::bind(&PoseControllerNode::poseCommand_callback, this,
                 std::placeholders::_1));
   // 发布控制指令
@@ -33,12 +35,18 @@ void PoseControllerNode::init_PID() {
   this->declare_parameter<std::vector<double>>("yaw_controller_",
                                                {0.0, 0.0, 0.0, 0.0, 0.0});
 
+  this->declare_parameter<int>("scale_factor", 1);
+  scale_factor_ = this->get_parameter("scale_factor").as_double();
+
+
   std::vector<double> x_pid_param =
       this->get_parameter("x_controller_").as_double_array();
-  std::vector<double> y_pid_param =
+  std::vector<double> y_pid_param   =
       this->get_parameter("y_controller_").as_double_array();
   std::vector<double> yaw_pid_param =
       this->get_parameter("z_controller_").as_double_array();
+
+
 
   // @TODO yaml添加pid初始化结构体的struct定义
   x_controller_ = std::make_unique<PIDController>(x_pid_param);
@@ -73,6 +81,11 @@ void PoseControllerNode::poseCommand_callback(
   twist_msg.linear.x = x_controller_->pidCalculate(desire_x);
   twist_msg.linear.y = y_controller_->pidCalculate(desire_y);
   twist_msg.angular.z = yaw_controller_->pidCalculate(desire_yaw);
+
+  RCLCPP_INFO_STREAM(this->get_logger(),
+                     "Desired x: " << twist_msg.linear.x
+                                   << ", y: " << twist_msg.linear.y
+                                   << ", yaw: " << twist_msg.linear.z);
 
   cmd_pub_->publish(twist_msg);
 }
@@ -112,7 +125,7 @@ double PIDController::pidCalculate(double target) {
   }
 
   last_err_ = err_;
-  last_measure_ = measure_;
+  // last_measure_ = measure_;
   last_dout_ = Dout_;
 
   return output_;

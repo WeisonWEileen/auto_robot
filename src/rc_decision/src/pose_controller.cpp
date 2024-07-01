@@ -61,6 +61,7 @@ public:
         position_id_subscriber_ = this->create_subscription<std_msgs::msg::Int64>(
             "/position_id", 10, std::bind(&PoseController::position_id_callback, this, std::placeholders::_1));
         pid_status_publisher_ = this->create_publisher<std_msgs::msg::String>("/pid_status", 10); 
+        
             robot_mode_subscriber_ = this->create_subscription<std_msgs::msg::Int64>(
         "robot_mode", 10, std::bind(&PoseController::robot_mode_callback, this, std::placeholders::_1)); 
         

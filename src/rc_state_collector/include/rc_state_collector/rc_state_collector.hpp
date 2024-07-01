@@ -2,15 +2,17 @@
 
 #ifndef RC_STATE_COLLECTOR_HPP_
 #define RC_STATE_COLLECTOR_HPP_
-
+#include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <chrono>
-#include <rclcpp/publisher.hpp>
 #include <rclcpp/rclcpp.hpp>
+
+#define PI 3.1415926
+
+// 用于接受所有抽象层的数据，生成最终的机器人的控制策略
 
 #define ROBO_MODE_RUNNING 0
 #define ROBO_MODE_FINDING 1
@@ -23,13 +25,11 @@
 #define CARRY_BALL_MODE_YES 1
 
 #define O_0_E_1 1
-#define O_1_E_0 2
 #define O_0_E_0 3
-#define O_2_E_0 4
 #define O_1_E_1 5
 #define O_0_E_2 6
 
-namespace rc_state_collector{
+namespace rc_state_collector {
     class StateCollectorNode : public rclcpp::Node
     {
         public:
@@ -42,10 +42,14 @@ namespace rc_state_collector{
             int robo_mode_;
 
             // 机器人所处的位置的装填
-            // AREA_MODE_OUTSIDE3 对应：1区2区 对应0
-            // AREA_MODE_INSIDE3 现在：3区 对应1
+            // AREA_MODE_0 1区
+            // AREA_MODE_1 2区
+            // AREA_MODE_3 3区 
             // robo_mode_ 应该优先考虑area_mode_而不用考虑其它地方
             int area_mode_;
+
+            // 球框的状态
+            int rim_mode_;
 
             // 机器人是否携带球
             // CARRY_BALL_MODE_NO 未携带球：0
@@ -55,31 +59,26 @@ namespace rc_state_collector{
 
 
         private:
-
-            //订阅里程计数据 
-            rclcpp::Subscription<geometry_msgs::msg::TransformStamped>::SharedPtr
-                odom_sub_;
-
-            void odom_callback(const geometry_msgs::msg::TransformStamped::SharedPtr msg);
-
             //直接订阅rim的state
             //    --------------  //
             // 更新目标框的发布生成运动信息
             //   ---------------  //
-            rclcpp::Subscription<std_msgs::msg::String>::SharedPtr rim_state_sub_;
-            void rim_goal_callback(const std_msgs::msg::Int32::SharedPtr msg);
+          rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr rim_state_sub_;
 
-            // 订阅球的携带状态
-            // 两种状态，对应有或者无
-            rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
-                carried_state_sub_;
-            void carried_state_callback(const std_msgs::msg::Bool::SharedPtr msg);
+          // 订阅球的携带状态
+          // 两种状态，对应有或者无
+          rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
+              carried_state_sub_;
+          void carried_state_callback(const std_msgs::msg::Bool::SharedPtr msg);
 
-            rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pose_pub_;
+          rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr
+              pose_pub_;
 
-            // 定时更新机器人装填
-            rclcpp::TimerBase::SharedPtr timer_;
-            void robo_state_callback();
+          // 定时更新机器人装填
+          rclcpp::TimerBase::SharedPtr timer_;
+          void robo_state_callback();
+
+
     };
 }
 

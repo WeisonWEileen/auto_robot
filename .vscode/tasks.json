@@ -11,6 +11,21 @@
                 "isDefault": true
             },
             "problemMatcher": "$gcc"
+        },
+         {
+            "label": "launch pid contorller",
+            "detail": "Build ROS 2 workspace",
+            "type": "shell",
+            "command": "ros2 launch rc_controller controller.launch.py",
+            "problemMatcher": "$gcc"
         }
+        ,
+         {
+            "label": "launch rc_state_collector",
+            "detail": "Build ROS 2 workspace",
+            "type": "shell",
+            "command": "ros2 launch rc_state_collector state_collector.launch.py ",
+            "problemMatcher": "$gcc"
+        },
 	]
 }

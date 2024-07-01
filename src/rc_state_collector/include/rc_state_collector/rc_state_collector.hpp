@@ -9,6 +9,8 @@
 #include "std_msgs/msg/string.hpp"
 #include <chrono>
 #include <rclcpp/rclcpp.hpp>
+#include "rc_controller/pid_controller.hpp"
+#include <vector>
 
 #define PI 3.1415926
 
@@ -71,6 +73,7 @@ namespace rc_state_collector {
               carried_state_sub_;
           void carried_state_callback(const std_msgs::msg::Bool::SharedPtr msg);
 
+        geometry_msgs::msg::Point desire_pose_msg_;
           rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr
               pose_pub_;
 

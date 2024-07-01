@@ -1,17 +1,24 @@
 #ifndef RC_CONTROLLER_PID_CONTROLLER_HPP_
 #define RC_CONTROLLER_PID_CONTROLLER_HPP_
 
+#define Pai 3.1415926
 // 这是控制层的PID控制器，用于控制机器人的运动
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/int64.hpp>
+#include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <vector>
+#include <std_msgs/msg/int32.hpp>
+
+// 三个目标点的对应的阈值
+#define Area_12_XThres 6.0
+#define Area_22_YThres -3.5
+#define Area_23_YThres 9.0
 
 namespace rc_controller {
 
@@ -65,7 +72,12 @@ private:
   std::unique_ptr<PIDController> x_controller_;
   std::unique_ptr<PIDController> y_controller_;
   std::unique_ptr<PIDController> yaw_controller_;
-  int robot_mode_;
+
+// 储存位置信息并且做发布
+  std_msgs::msg::Int32 position_mode_;
+  //位置默认的发布
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr position_mode_pub_;
+  
 
   //初始化PID嵌套类
   void init_PID();
@@ -92,10 +104,6 @@ private:
   Pose current_pose_;
   float scale_factor_;
 };
-//         rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr
-//         cmd_pid_publisher_;
-
-// }
 
 } // namespace rc_controller
 

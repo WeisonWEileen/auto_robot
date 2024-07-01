@@ -178,8 +178,12 @@ namespace rc_serial_driver
         packet.linear_y = msg->linear.y;
         packet.angular_z = msg->angular.z;
 
-        crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet),
-                                      sizeof(packet));
+        // packet.x = 0;
+        // packet.y = 0;
+        // packet.angular_z = 2000;
+
+        // crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet),
+        //                               sizeof(packet));
 
         std::vector<uint8_t> data = toVector(packet);
 

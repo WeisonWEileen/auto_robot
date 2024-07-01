@@ -146,6 +146,7 @@
     "variant": "cpp",
     "*.ipp": "cpp",
     "bitset": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "source_location": "cpp"
   }
 }

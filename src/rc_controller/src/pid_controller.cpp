@@ -2,6 +2,8 @@
 
 namespace rc_controller {
 
+
+
 PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
     : Node("pose_controller", options) {
   RCLCPP_INFO(this->get_logger(), "Starting PoseController node!");
@@ -33,8 +35,6 @@ void PoseControllerNode::init_PID() {
                                                {0.0, 0.0, 0.0, 0.0, 0.0});
   this->declare_parameter<std::vector<double>>("yaw_controller_",
                                                {0.0, 0.0, 0.0, 0.0, 0.0});
-
-  this->declare_parameter<int>("scale_factor", 1);
   scale_factor_ = this->get_parameter("scale_factor").as_double();
 
   std::vector<double> x_pid_param =
@@ -67,6 +67,10 @@ void PoseControllerNode::poseUpdate_callback(
   RCLCPP_INFO(this->get_logger(), "x: %f, y: %f, yaw: %f", current_x, current_y,
               yaw);
 
+  current_pose_.x = current_x;
+  current_pose_.y = current_y;
+  current_pose_.yaw = yaw;
+
   x_controller_->setMeasure(current_x);
   y_controller_->setMeasure(current_y);
   yaw_controller_->setMeasure(yaw);
@@ -83,12 +87,18 @@ void PoseControllerNode::poseCommand_callback(
 
   geometry_msgs::msg::Twist twist_msg;
 
-  
+
+  //给定当前的yaw，转换为世界坐标系下的desire_x，desire_y的平移速度，desire_yaw的不需要改
+
+
+
 
   // 注意这里z是直接对应的yaw轴的转定角度
-  twist_msg.linear.x = x_controller_->pidCalculate(msg->x);
-  twist_msg.linear.y = y_controller_->pidCalculate(msg->y);
-  twist_msg.angular.z = yaw_controller_->pidCalculate(msg->z);
+  twist_msg.linear.x = x_controller_->pidCalculate(0.0,msg->x);
+  twist_msg.linear.y = y_controller_->pidCalculate(0.0,msg->y);
+  twist_msg.angular.z = yaw_controller_->pidCalculate(0.0,msg->z);
+
+
 
   // @TODO 后续可以取消
   RCLCPP_INFO_STREAM(this->get_logger(),
@@ -107,10 +117,10 @@ PIDController::PIDController(std::vector<double> pid_param) {
   integral_lim_ = pid_param[4];
 }
 
-double PIDController::pidCalculate(double target) {
+double PIDController::pidCalculate(double current, double desire_value) {
   //注意measure_在另外一个线程中得到更新
 
-  err_ = target - measure_;
+  err_ = desire_value - current;
   Pout_ = kp_ * err_;
   ITerm_ = ki_ * err_;
   Iout_ += ITerm_;
@@ -139,7 +149,22 @@ double PIDController::pidCalculate(double target) {
   return output_;
 }
 void PIDController::setMeasure(double measure) { measure_ = measure; }
-} // namespace rc_controller
 
+Pose PoseControllerNode::target_xy_transform(double desire_world_x,
+                                             double desire_world_y,
+                                             double desire_yaw) {
+
+  Pose world_target_pose;
+  world_target_pose.x =
+      cos(current_pose_.yaw) * (desire_world_x - current_pose_.x) -
+      sin(current_pose_.yaw) * (desire_world_y - current_pose_.y);
+  world_target_pose.y = sin(current_pose_.yaw) * (desire_world_x-current_pose_.x) + cos(current_pose_.yaw) * (desire_world_y - current_pose_.y);
+
+  world_target_pose.yaw = desire_yaw - current_pose_.yaw;
+
+  return world_target_pose;
+}
+
+} // namespace rc_controller
 #include "rclcpp_components/register_node_macro.hpp"
 RCLCPP_COMPONENTS_REGISTER_NODE(rc_controller::PoseControllerNode)

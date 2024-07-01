@@ -15,7 +15,7 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[{
             "x_controller_":[1.0,0.0,0.0,0.0,10.0],
-            "y_controller_":[1.0,0.0,0.0,0.0,10.0],
+            "y_controller_":[0.0,0.0,0.0,0.0,10.0],
             "yaw_controller_":[0.0,0.0,0.0,0.0,0.0],
             }],
         arguments=['--ros-args','--log-level','debug'],

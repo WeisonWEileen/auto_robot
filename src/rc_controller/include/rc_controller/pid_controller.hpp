@@ -15,13 +15,19 @@
 
 namespace rc_controller {
 
+struct Pose {
+  double x;
+  double y;
+  double yaw;
+};
+
 class PIDController {
 public:
   PIDController(std::vector<double>);
 
   // double kp, double ki, double kd,double max_out, double integral_lim
 
-  double pidCalculate(double desire_value);
+  double pidCalculate(double current, double desire_value);
   void setMeasure(double measure);
 
   double measure_ = 0.0;
@@ -64,20 +70,26 @@ private:
   //初始化PID嵌套类
   void init_PID();
 
+
   // 发布运动控制指令
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
+  // 转换目标位置到机器人坐标系
+  Pose target_xy_transform(double desire_world_x, double desire_world_y,
+                           double desire_yaw);
 
-  // 订阅现在位置
+  // 订阅mid360现在位置
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
       poseUpdate_sub_;
   void poseUpdate_callback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
-  // 订阅目标位置,z直接对应yaw轴
+  // 订阅决策目标位置,z直接对应yaw轴
   rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr
       poseCommand_sub_;
   void
   poseCommand_callback(const geometry_msgs::msg::Point::ConstSharedPtr msg);
 
+// 记录当前的x,y,yaw位姿，mid360订阅更新
+  Pose current_pose_;
   float scale_factor_;
 };
 //         rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr

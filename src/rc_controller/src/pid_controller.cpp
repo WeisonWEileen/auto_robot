@@ -44,7 +44,8 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
                 std::placeholders::_1));
 
   // 发布电机控制，和下位机对接点
-  cmd_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+  cmd_pub_ =
+      this->create_publisher<rc_interface_msgs::msg::Motion>("/cmd_vel", 10);
 }
 
 void PoseControllerNode::init_PID() {
@@ -163,26 +164,29 @@ void PoseControllerNode::poseCommand_callback(
                      "Input_Desired x: " << msg->x << ", y: " << msg->y
                                          << ", yaw: " << msg->z);
 
-  geometry_msgs::msg::Twist twist_msg;
+  // geometry_msgs::msg::Twist twist_msg;
+
+  rc_interface_msgs::msg::Motion motion_msg;
 
   // 注意这里z是直接对应的yaw轴的转定角度
   // twist_msg.linear.x = x_controller_->pidCalculate(0.0, world_target_pose.x);
-  twist_msg.linear.x = x_controller_->pidCalculate(current_pose_.x, msg->x);
+  motion_msg.cmd_vx = x_controller_->pidCalculate(current_pose_.x, msg->x);
   // twist_msg.linear.y = y_controller_->pidCalculate(0.0, world_target_pose.y);
-  twist_msg.linear.y = y_controller_->pidCalculate(current_pose_.y, msg->y);
-  // measure_yaw,测量到的角度
-  twist_msg.linear.z = current_pose_.yaw;
+  motion_msg.cmd_vy = y_controller_->pidCalculate(current_pose_.y, msg->y);
   // desire_yaw，目标值
-  twist_msg.angular.z = msg->z;
+  motion_msg.desire_yaw = msg->z;
+
+  // measure_yaw,测量到的角度
+  motion_msg.measure_yaw = current_pose_.yaw;
 
   // @TODO 后续可以取消
   RCLCPP_WARN_STREAM(this->get_logger(),
                      "Output_of_v x: "
-                         << twist_msg.linear.x << ", y: " << twist_msg.linear.y
-                         << ", desire_yaw: " << twist_msg.angular.z
-                         << ", measure_yaw: " << twist_msg.linear.z);
+                         << motion_msg.cmd_vx << ", y: " << motion_msg.cmd_vy
+                         << ", desire_yaw: " << motion_msg.desire_yaw
+                         << ", measure_yaw: " << motion_msg.measure_yaw);
 
-  cmd_pub_->publish(twist_msg);
+  cmd_pub_->publish(motion_msg);
 }
 
 PIDController::PIDController(std::vector<double> pid_param) {

@@ -21,8 +21,7 @@
 #include <thread>
 #include <vector>
 
-//#include "auto_aim_interfaces/msg/target.hpp"
-
+#include "rc_interface_msgs/msg/motion.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
@@ -40,7 +39,7 @@ namespace rc_serial_driver
 
         void receiveData();
 
-        void sendData(geometry_msgs::msg::Twist::SharedPtr msg);
+        void sendData(rc_interface_msgs::msg::Motion::SharedPtr msg);
 
         void reopenPort();
 
@@ -71,7 +70,8 @@ namespace rc_serial_driver
         double timestamp_offset_ = 0;
         std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
-        rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr target_sub_;
+        rclcpp::Subscription<rc_interface_msgs::msg::Motion>::SharedPtr
+            target_sub_;
 
         // For debug usage
         rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;

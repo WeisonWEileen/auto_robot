@@ -1,4 +1,0 @@
-base_link2livox_frame:
-  #x为12m y为6m方向
-  xyz: "\"0.194 -0.345 0\""
-  rpy: "\"0.0  0.0  0.0\""

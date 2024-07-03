@@ -71,7 +71,7 @@ namespace rc_serial_driver
 
 
         // Create Subscription                                    DetectionArray
-        target_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+        target_sub_ = this->create_subscription<rc_interface_msgs::msg::Motion>(
             "/cmd_vel", rclcpp::SensorDataQoS(),
             std::bind(&RCSerialDriver::sendData, this, std::placeholders::_1));
     }
@@ -169,15 +169,15 @@ namespace rc_serial_driver
 
     //accept ball-tracking data, and give four motors velocity
     void
-    RCSerialDriver::sendData(const geometry_msgs::msg::Twist::SharedPtr msg) {
+    RCSerialDriver::sendData(const rc_interface_msgs::msg::Motion::SharedPtr msg) {
 
       try {
         SendPacket packet;
 
-        packet.cmd_vx = static_cast<float>(msg->linear.x);
-        packet.cmd_vy = static_cast<float>(msg->linear.y);
-        packet.measure_yaw = static_cast<float>(msg->linear.z);
-        packet.desire_yaw = static_cast<float>(msg->angular.z);
+        packet.cmd_vx = msg->cmd_vx;
+        packet.cmd_vy = msg->cmd_vy;
+        packet.measure_yaw = msg->desire_yaw;
+        packet.desire_yaw = msg->measure_yaw;
 
         std::vector<uint8_t> data = toVector(packet);
 

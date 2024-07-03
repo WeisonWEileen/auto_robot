@@ -12,7 +12,6 @@ StateCollectorNode::StateCollectorNode(
 
   getParam();
 
-
   rim_state_sub_ = this->create_subscription<std_msgs::msg::Int32>(
       "/rc/vision_rimstate", 10, [this](std_msgs::msg::Int32::SharedPtr msg) {
         this->rim_mode_ = msg->data;
@@ -21,8 +20,8 @@ StateCollectorNode::StateCollectorNode(
   // @TODO 优化成只有欧拉角的计算
   //发布的位置的发布点，先
 
-  pose_pub_ =
-      this->create_publisher<geometry_msgs::msg::Point>("/rc/desire_pose", 10);
+  motion_pub_ = this->create_publisher<rc_interface_msgs::msg::Motion>(
+      "/rc/desire_pose", 10);
 
   timer_ = this->create_wall_timer(
       std::chrono::milliseconds(90),
@@ -37,23 +36,23 @@ void StateCollectorNode::robo_state_callback() {
   // 发布目标的运动信息，记得z代表的是yaw轴的角度
   // 启动的时候如果在1区，那么就是上2区的红色的点的地方
 
-  if (robo_mode_ == 0) {
-    geometry_msgs::msg::Point desire_pose_msg;
-    desire_pose_msg.x = Area_12_XThres;
-    desire_pose_msg.y = 0;
-    desire_pose_msg.z = 0 * PI;
+  // if (robo_mode_ == 0) {
+  //   geometry_msgs::msg::Point desire_pose_msg;
+  //   desire_pose_msg.x = Area_12_XThres;
+  //   desire_pose_msg.y = 0;
+  //   desire_pose_msg.z = 0 * PI;
 
-    pose_pub_->publish(desire_pose_msg_);
+  //   pose_pub_->publish(desire_pose_msg_);
 
-  } else if (robo_mode_ == 1) {
-    geometry_msgs::msg::Point desire_pose_msg;
+  // } else if (robo_mode_ == 1) {
+  //   geometry_msgs::msg::Point desire_pose_msg;
 
-    desire_pose_msg.x = Area_12_XThres;
-    desire_pose_msg.y = Area_22_YThres;
-    desire_pose_msg.z = 0 * PI;
+  //   desire_pose_msg.x = Area_12_XThres;
+  //   desire_pose_msg.y = Area_22_YThres;
+  //   desire_pose_msg.z = 0 * PI;
 
-    pose_pub_->publish(desire_pose_msg_);
-  }
+  //   pose_pub_->publish(desire_pose_msg_);
+  // }
   // } else if (robo_mode_ == 2) {
   //   geometry_msgs::msg::Point desire_pose_msg;
 
@@ -68,7 +67,7 @@ void StateCollectorNode::robo_state_callback() {
   //   pose_pub_->publish(desire_pose_msg);
 }
 
-void StateCollectorNode::getParam(){
+void StateCollectorNode::getParam() {
   // 用于测试
   this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose =
@@ -88,7 +87,6 @@ void StateCollectorNode::getParam(){
   // desire的角度
   desire_pose_msg2_.z = desire_pose2[2];
 
-  
   this->declare_parameter<std::vector<double>>("desire_pose3", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose3 =
       this->get_parameter("desire_pose3").as_double_array();
@@ -97,7 +95,6 @@ void StateCollectorNode::getParam(){
   desire_pose_msg3_.y = desire_pose3[1];
   // desire的角度
   desire_pose_msg3_.z = desire_pose3[2];
-
 }
 
 void StateCollectorNode::carried_state_callback(

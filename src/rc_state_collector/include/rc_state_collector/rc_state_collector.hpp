@@ -87,6 +87,10 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<rc_interface_msgs::msg::Motion>::SharedPtr motion_pub_;
   void robo_state_callback();
+
+  // 用于订阅一开始的位置状态
+  rclcpp::Subscription<const sensor_msgs::msg::Image::SharedPtr>
+      ares_detector_sub_;
 };
 } // namespace rc_state_collector
 

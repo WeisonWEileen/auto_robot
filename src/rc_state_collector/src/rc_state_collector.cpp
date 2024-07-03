@@ -1,5 +1,7 @@
 // Copyright 2024 Weison_Pan
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <rc_state_collector/rc_state_collector.hpp>
 
 namespace rc_state_collector {
@@ -14,21 +16,31 @@ StateCollectorNode::StateCollectorNode(
   getParam();
 
 
-  // 
+  
   rim_state_sub_ = this->create_subscription<std_msgs::msg::Int32>(
       "/rc/vision_rimstate", 10, [this](std_msgs::msg::Int32::SharedPtr msg) {
         this->rim_mode_ = msg->data;
       });
 
-  
-  // 订阅决策出来的目标球的三维坐标信息,由于球的高度是一定的，所以只用了二维信息
-  ball_target_sub_ = this->create_subscription<yolov8_msgs::msg::KeyPoint3D>(
-      "/rc_detector/keypoint3d", 10,
-      [this](yolov8_msgs::msg::KeyPoint3D::SharedPtr msg)
+  ares_detector_sub_ = this->create_subscription<const sensor_msgs::msg::Image>(
+      "/image_raw", 10, [this](sensor_msgs::msg::Image::ConstSharedPtr &msg)
       {
-        target_ball_[0] = msg->point.x;
-        target_ball_[1] = msg->point.y;
-      });
+        // 直接检测开机的状态设置启动的robomode
+        cv::Mat start_frame = cv_bridge::toCvCopy(msg,"bgr8")->image;
+
+        
+
+         });
+
+  // 订阅决策出来的目标球的三维坐标信息,由于球的高度是一定的，所以只用了二维信息
+  ball_target_sub_ =
+      this->create_subscription<yolov8_msgs::msg::KeyPoint3D>(
+          "/rc_detector/keypoint3d", 10,
+          [this](yolov8_msgs::msg::KeyPoint3D::SharedPtr msg)
+          {
+            target_ball_[0] = msg->point.x;
+            target_ball_[1] = msg->point.y;
+          });
 
   // 定时回调发布机器人的运动命令
   timer_ = this->create_wall_timer(

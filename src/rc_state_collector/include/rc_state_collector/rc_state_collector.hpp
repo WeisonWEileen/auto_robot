@@ -9,6 +9,7 @@
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "yolov8_msgs/msg/key_point3_d.hpp"
 #include <chrono>
 #include <rclcpp/rclcpp.hpp>
 #include <vector>
@@ -59,6 +60,9 @@ public:
   int carry_ball_mode_;
 
 private:
+  // 调参接口，获取所有的3个点的位置参数
+  void getParam();
+
   //直接订阅rim的state
   //    --------------  //
   // 更新目标框的发布生成运动信息
@@ -70,16 +74,19 @@ private:
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr carried_state_sub_;
   void carried_state_callback(const std_msgs::msg::Bool::SharedPtr msg);
 
-  geometry_msgs::msg::Point desire_pose_msg_;
+  geometry_msgs::msg::Point desire_pose_msg1_;
   geometry_msgs::msg::Point desire_pose_msg2_;
   geometry_msgs::msg::Point desire_pose_msg3_;
 
-  rclcpp::Publisher<rc_interface_msgs::msg::Motion>::SharedPtr motion_pub_;
+  // 订阅目标球的三维坐标
+  rclcpp::Subscription<yolov8_msgs::msg::KeyPoint3D>::SharedPtr
+      ball_target_sub_;
+  std::array<float, 2> target_ball_;
 
-  // 定时更新机器人装填
+  // 定时发布机器人的运动信息
   rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::Publisher<rc_interface_msgs::msg::Motion>::SharedPtr motion_pub_;
   void robo_state_callback();
-  void getParam();
 };
 } // namespace rc_state_collector
 

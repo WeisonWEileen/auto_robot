@@ -109,10 +109,6 @@ void PoseControllerNode::poseUpdate_callback(
   auto current_x = msg->pose.pose.position.x;
   auto current_y = msg->pose.pose.position.y;
 
-  // 根据现在的位置直接发布位置模式
-
-  
-
   //订阅四元数的角度，转换为yaw轴的角度
   tf2::Quaternion quat;
   tf2::fromMsg(msg->pose.pose.orientation, quat);
@@ -122,31 +118,44 @@ void PoseControllerNode::poseUpdate_callback(
   yaw = yaw*180.0f/3.1415926f;
 
   // 只是想要红色的输出，并不是ERROR
-  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,
-               current_y, yaw);
+  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,current_y, yaw);
 
   // 机器人区域状态切换
-  // 如果机器人在1区
-  if (position_mode_.data == 0) {
-    if (euclidis(current_x,current_y,yaw,desire_pose1_.x,desire_pose1_.y,desire_pose1_.yaw) < euclidisThres_ ) {
+  // 如果机器人在状态1，那么就是1-2，运动到2去
+
+
+  if (position_mode_.data == 0) 
+  {
+      if (euclidis(current_x,current_y,yaw,desire_pose1_.x,desire_pose1_.y,desire_pose1_.yaw) < euclidisThres_ ) {
+        // 还在跑第一段线段,继续跑
+        position_mode_.data = 1;
+      }
+  }
+
+  // 如果机器人在状态2，那么就是2-2，运动到2下面去
+  else if (position_mode_.data == 1) {
+    if (euclidis(current_x, current_y, yaw, desire_pose2_.x, desire_pose2_.y,desire_pose2_.yaw) < euclidisThres_){
       // 还在跑第一段线段,继续跑
-      position_mode_.data = 0;
-      position_mode_pub_->publish(position_mode_);
-    } else if (current_x > Area_12_XThres && current_y < Area_22_YThres) {
-      // 已经跑完
-      position_mode_.data = 1;
-      position_mode_pub_->publish(position_mode_);
+      position_mode_.data = 2;
+    } 
+  }
+
+  else if (position_mode_.data == 2)
+  {
+    if (euclidis(current_x, current_y, yaw, desire_pose3_.x, desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
+      // 还在跑第一段线段,继续跑
+      position_mode_.data = 3;
+    } else {
+      // 已经跑到了范围内部
     }
-  } else if (current_x > 8 && current_y > 4) {
-    position_mode_.data = 1;
-    position_mode_pub_->publish(position_mode_);
+  }
   
 
   current_pose_.x = current_x;
   current_pose_.y = current_y;
   current_pose_.yaw = yaw;
 
-  }
+  position_mode_pub_->publish(position_mode_);
 }
 
 inline double PoseControllerNode::euclidis(double x1, double x2, double x3, double y1, double y2, double y3) {

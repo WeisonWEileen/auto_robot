@@ -174,20 +174,15 @@ namespace rc_serial_driver
       try {
         SendPacket packet;
 
-        packet.linear_x = msg->linear.x;
-        packet.linear_y = msg->linear.y;
-        packet.angular_z = msg->angular.z;
-
-        // packet.x = 0;
-        // packet.y = 0;
-        // packet.angular_z = 2000;
-
-        // crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet),
-        //                               sizeof(packet));
+        packet.cmd_vx = static_cast<float>(msg->linear.x);
+        packet.cmd_vy = static_cast<float>(msg->linear.y);
+        packet.measure_yaw = static_cast<float>(msg->linear.z);
+        packet.desire_yaw = static_cast<float>(msg->angular.z);
 
         std::vector<uint8_t> data = toVector(packet);
 
         serial_driver_->port()->send(data);
+        
       } catch (const std::exception &ex) {
         RCLCPP_ERROR(get_logger(), "Error while sending data: %s", ex.what());
         reopenPort();

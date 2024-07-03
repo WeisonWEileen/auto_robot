@@ -21,12 +21,17 @@ namespace rc_serial_driver
 //     } __attribute__((packed));
 
     struct SendPacket {
+    //   uint8_t header = 0x5A;
       uint8_t header = 43;
-      float linear_x;
-      float linear_y;
-      float angular_z;
-      uint16_t tail = 43; // This is for the CRC checksum. Remember to sizeof(SendPacket)
-             // represent the real length of the data
+      float cmd_vx = 0.0f;
+      float cmd_vy = 0.0f;
+      float desire_yaw;
+      float measure_yaw;
+      float x_dot = 0.0f;
+      float y_dot = 0.0f;
+      uint8_t d;
+      uint8_t tail = 43;
+      // uint16_t checksum
 
     } __attribute__((packed));
 

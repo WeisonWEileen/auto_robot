@@ -74,12 +74,16 @@ namespace rc_state_collector {
           void carried_state_callback(const std_msgs::msg::Bool::SharedPtr msg);
 
         geometry_msgs::msg::Point desire_pose_msg_;
-          rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr
+        geometry_msgs::msg::Point desire_pose_msg2_;
+        geometry_msgs::msg::Point desire_pose_msg3_;
+
+        rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr
               pose_pub_;
 
           // 定时更新机器人装填
           rclcpp::TimerBase::SharedPtr timer_;
           void robo_state_callback();
+          void getParam();
 
 
     };

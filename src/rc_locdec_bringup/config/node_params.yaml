@@ -24,9 +24,8 @@
 /state_collector_node:
   ros__parameters:              
     desire_pose: [0.0, -3.31, 90.0]
-    desire_pose_1: [0.0, -3.31, 90.0]
-    desire_pose_2: [0.0, -3.31, 90.0]
-    desire_pose_3: [0.0, -3.31, 90.0]
+    desire_pose2: [0.0, -3.31, 90.0]
+    desire_pose3: [0.0, -3.31, 90.0]
 
 /controller_node:
   ros__parameters:              

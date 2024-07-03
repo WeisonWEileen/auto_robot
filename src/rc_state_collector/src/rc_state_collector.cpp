@@ -79,17 +79,6 @@ void StateCollectorNode::getParam(){
   desire_pose_msg_.y = desire_pose[1];
   desire_pose_msg_.z = desire_pose[2];
 
-
-  // 用于测试
-  this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
-  std::vector<double> desire_pose =
-      this->get_parameter("desire_pose").as_double_array();
-
-  desire_pose_msg_.x = desire_pose[0];
-  desire_pose_msg_.y = desire_pose[1];
-  // desire的角度
-  desire_pose_msg_.z = desire_pose[2];
-
   this->declare_parameter<std::vector<double>>("desire_pose2", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose2 =
       this->get_parameter("desire_pose2").as_double_array();
@@ -108,11 +97,6 @@ void StateCollectorNode::getParam(){
   desire_pose_msg3_.y = desire_pose3[1];
   // desire的角度
   desire_pose_msg3_.z = desire_pose3[2];
-
-  
-
-
-
 
 }
 

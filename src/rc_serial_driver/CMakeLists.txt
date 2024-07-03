@@ -17,7 +17,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #######################
 
 find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()
+ament_auto_find_build_dependencies(
+  
+)
 
 ###########
 ## Build ##

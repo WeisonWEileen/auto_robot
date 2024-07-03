@@ -14,6 +14,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <vector>
 #include <std_msgs/msg/int32.hpp>
+#include <cmath>
 
 // 三个目标点的对应的阈值
 #define Area_12_XThres 6.0
@@ -35,7 +36,6 @@ public:
   // double kp, double ki, double kd,double max_out, double integral_lim
 
   double pidCalculate(double current, double desire_value);
-  void setMeasure(double measure);
 
   double measure_ = 0.0;
 private:
@@ -81,6 +81,13 @@ private:
 
   //初始化PID嵌套类
   void init_PID();
+  // 获取连续运动的阈值
+  void get_desireLoc();
+  // 储存的三个目标地点的目标值
+  Pose desire_pose1_  ;
+  Pose desire_pose2_ ;
+  Pose desire_pose3_ ;
+  float euclidisThres_;
 
 
   // 发布运动控制指令
@@ -93,6 +100,9 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr
       poseUpdate_sub_;
   void poseUpdate_callback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
+
+  // 用欧氏距离判断是否达到了目标值
+  inline double euclidis(double x1,double x2, double x3, double y1,double y2,double y3);
 
   // 订阅决策目标位置,z直接对应yaw轴
   rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr

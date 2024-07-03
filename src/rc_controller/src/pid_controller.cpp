@@ -15,7 +15,15 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
     : Node("pose_controller", options) {
   RCLCPP_INFO(this->get_logger(), "Starting PoseController node!");
 
+  get_desireLoc();
   init_PID();
+
+  // 初始化位置
+  current_pose_.x = 0;
+  current_pose_.y = 0;
+  current_pose_.yaw = 0;
+
+
 
   // Fastlio
   //实时订阅Mid360发出来的当前位姿信息
@@ -61,6 +69,37 @@ void PoseControllerNode::init_PID() {
   yaw_controller_ = std::make_unique<PIDController>(yaw_pid_param);
 }
 
+// 
+void PoseControllerNode::get_desireLoc(){
+
+  // 距离到达的阈值
+
+  // desire Pose 1
+  this->declare_parameter<std::vector<double>>("desire_pose1", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose1 =
+      this->get_parameter("desire_pose1").as_double_array();
+  desire_pose1_.x =   desire_pose1[0];
+  desire_pose1_.y =   desire_pose1[1];
+  desire_pose1_.yaw = desire_pose1[2];
+  
+  
+  // desire Pose 2
+  this->declare_parameter<std::vector<double>>("desire_pose2", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose2 =
+      this->get_parameter("desire_pose2").as_double_array();
+  desire_pose2_.x = desire_pose2[0];
+  desire_pose2_.y = desire_pose2[1];
+  desire_pose2_.yaw = desire_pose2[2];
+ 
+  // desire Pose 3 
+  this->declare_parameter<std::vector<double>>("desire_pose3", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose3 =
+      this->get_parameter("desire_pose3").as_double_array();
+  desire_pose3_.x = desire_pose3[0];
+  desire_pose3_.y = desire_pose3[1];
+  desire_pose3_.yaw = desire_pose3[2];
+}
+
 // 订阅mid360的驱动接口
 void PoseControllerNode::poseUpdate_callback(
     const nav_msgs::msg::Odometry::ConstSharedPtr msg) {
@@ -71,9 +110,24 @@ void PoseControllerNode::poseUpdate_callback(
 
   // 根据现在的位置直接发布位置模式
 
+  
+
+  //订阅四元数的角度，转换为yaw轴的角度
+  tf2::Quaternion quat;
+  tf2::fromMsg(msg->pose.pose.orientation, quat);
+  tf2::Matrix3x3 m(quat);
+  double roll, pitch, yaw;
+  m.getRPY(roll, pitch, yaw);
+  yaw = yaw*180.0f/3.1415926f;
+
+  // 只是想要红色的输出，并不是ERROR
+  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,
+               current_y, yaw);
+
+  // 机器人区域状态切换
   // 如果机器人在1区
   if (position_mode_.data == 0) {
-    if (current_x < Area_12_XThres && current_y < Area_22_YThres) {
+    if (euclidis(current_x,current_y,yaw,desire_pose1_.x,desire_pose1_.y,desire_pose1_.yaw) < euclidisThres_ ) {
       // 还在跑第一段线段,继续跑
       position_mode_.data = 0;
       position_mode_pub_->publish(position_mode_);
@@ -85,23 +139,17 @@ void PoseControllerNode::poseUpdate_callback(
   } else if (current_x > 8 && current_y > 4) {
     position_mode_.data = 1;
     position_mode_pub_->publish(position_mode_);
-  }
-
-  //订阅四元数的角度，转换为yaw轴的角度
-  tf2::Quaternion quat;
-  tf2::fromMsg(msg->pose.pose.orientation, quat);
-  tf2::Matrix3x3 m(quat);
-  double roll, pitch, yaw;
-  m.getRPY(roll, pitch, yaw);
-
-  // 只是想要红色的输出，并不是ERROR
-  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,
-               current_y, yaw);
+  
 
   current_pose_.x = current_x;
   current_pose_.y = current_y;
   current_pose_.yaw = yaw;
 
+  }
+}
+
+inline double PoseControllerNode::euclidis(double x1, double x2, double x3, double y1, double y2, double y3) {
+  return std::sqrt(std::pow(x1 - y1, 2) + std::pow(x2 - y2, 2) + std::pow(x3 - y3, 2));
 }
 
 void PoseControllerNode::poseCommand_callback(
@@ -141,8 +189,8 @@ PIDController::PIDController(std::vector<double> pid_param) {
   kp_ = pid_param[0];
   ki_ = pid_param[1];
   kd_ = pid_param[2];
-  maxOut_ = pid_param[4];
   integral_lim_ = pid_param[3];
+  maxOut_ = pid_param[4];
 }
 
 double PIDController::pidCalculate(double current, double desire_value) {
@@ -174,7 +222,6 @@ double PIDController::pidCalculate(double current, double desire_value) {
 
   return output_;
 }
-void PIDController::setMeasure(double measure) { measure_ = measure; }
 
 Pose PoseControllerNode::target_xy_transform(double desire_world_x,
                                              double desire_world_y,

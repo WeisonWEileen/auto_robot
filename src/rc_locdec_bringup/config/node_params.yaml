@@ -32,3 +32,7 @@
     x_controller_: [1300.0, 0.0, 220.0, 0.0, 0.0]
     y_controller_: [1000.0, 0.1, 220.0, 350.0, 3000.0]
     yaw_controller_: [200.0, 5.0, 4.0, 2000.0,3000.0]
+    desire_pose1: [0.0, -3.31, 90.0]
+    desire_pose2: [0.0, -3.31, 90.0]
+    desire_pose3: [0.0, -3.31, 90.0]
+    euclidisThres: 0.2

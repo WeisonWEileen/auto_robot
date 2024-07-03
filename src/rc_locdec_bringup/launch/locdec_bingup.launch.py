@@ -3,13 +3,14 @@ import sys
 from ament_index_python.packages import get_package_share_directory
 
 sys.path.append(
-    os.path.join(get_package_share_directory("rc_vision_bringup"), "launch")
+    os.path.join(get_package_share_directory("rc_locdec_bringup"), "launch")
 )
 
 node_params = os.path.join(
     get_package_share_directory("rc_locdec_bringup"), "config", "node_params.yaml"
 )
 
+print(f"--------------------------Node parameters file: {node_params}")
 
 def generate_launch_description():
 
@@ -27,9 +28,9 @@ def generate_launch_description():
             extra_arguments=[{"use_intra_process_comms": True}],
         )
 
-    def get_camera_detector_projector_container(*regestered_nodes):
+    def get_container_node(*regestered_nodes):
         return ComposableNodeContainer(
-            name="locdec_container_node",
+            name="locdec_container",
             namespace="",
             package="rclcpp_components",
             executable="component_container",
@@ -47,12 +48,18 @@ def generate_launch_description():
     # --------------------------------------#
     # --------composable_node part----------#
 
-    controller_node = get_composable_node("rc_controller", "rc_controller::ControllerNode", "controller_node")
+    controller_node = get_composable_node(
+        "rc_controller", "rc_controller::PoseControllerNode", "controller_node"
+    )
 
-    state_collector_node = get_composable_node("rc_state_collector", "rc_state_collector::StateCollectorNode", "state_collector_node")
+    state_collector_node = get_composable_node(
+        "rc_state_collector",
+        "rc_state_collector::StateCollectorNode",
+        "state_collector_node",
+    )
 
     # 总的接口
-    locdec_node = get_camera_detector_projector_container(
+    locdec_node = get_container_node(
         controller_node,
         state_collector_node,
     )
@@ -90,6 +97,6 @@ def generate_launch_description():
         [
             # realsense_launch,
             locdec_node,
-            rc_serial_driver_node,
+            # rc_serial_driver_node,
         ]
     )

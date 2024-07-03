@@ -10,19 +10,18 @@ StateCollectorNode::StateCollectorNode(
 
   RCLCPP_INFO(this->get_logger(), "StateCollectorNode has been started.");
 
-
-// 用于测试
+  // 用于测试
   this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose =
       this->get_parameter("desire_pose").as_double_array();
+
+  // desire的角度
   desire_pose_msg_.x = desire_pose[0];
   desire_pose_msg_.y = desire_pose[1];
-  desire_pose_msg_.z = desire_pose[2]  * PI;
+  desire_pose_msg_.z = desire_pose[2];
 
   rim_state_sub_ = this->create_subscription<std_msgs::msg::Int32>(
-      "/rc/vision_rimstate", 10,
-      [this](std_msgs::msg::Int32::SharedPtr msg)
-      {
+      "/rc/vision_rimstate", 10, [this](std_msgs::msg::Int32::SharedPtr msg) {
         this->rim_mode_ = msg->data;
       });
 
@@ -33,7 +32,7 @@ StateCollectorNode::StateCollectorNode(
       this->create_publisher<geometry_msgs::msg::Point>("/rc/desire_pose", 10);
 
   timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(30),
+      std::chrono::milliseconds(90),
       std::bind(&StateCollectorNode::robo_state_callback, this));
 }
 
@@ -45,18 +44,15 @@ void StateCollectorNode::robo_state_callback() {
   // 发布目标的运动信息，记得z代表的是yaw轴的角度
   // 启动的时候如果在1区，那么就是上2区的红色的点的地方
 
-  if(robo_mode_ == 0 )
-  {
+  if (robo_mode_ == 0) {
     geometry_msgs::msg::Point desire_pose_msg;
-    desire_pose_msg.x = Area_12_XThres ;
+    desire_pose_msg.x = Area_12_XThres;
     desire_pose_msg.y = 0;
     desire_pose_msg.z = 0 * PI;
 
     pose_pub_->publish(desire_pose_msg_);
 
-  }
-  else if (robo_mode_ == 1)
-  {
+  } else if (robo_mode_ == 1) {
     geometry_msgs::msg::Point desire_pose_msg;
 
     desire_pose_msg.x = Area_12_XThres;
@@ -64,8 +60,7 @@ void StateCollectorNode::robo_state_callback() {
     desire_pose_msg.z = 0 * PI;
 
     pose_pub_->publish(desire_pose_msg_);
-
-  }-
+  }
   // } else if (robo_mode_ == 2) {
   //   geometry_msgs::msg::Point desire_pose_msg;
 
@@ -80,10 +75,8 @@ void StateCollectorNode::robo_state_callback() {
   //   pose_pub_->publish(desire_pose_msg);
 }
 
-
 void StateCollectorNode::carried_state_callback(
     const std_msgs::msg::Bool::SharedPtr msg) {
-  ;
 
   //
   if (msg->data == true) {

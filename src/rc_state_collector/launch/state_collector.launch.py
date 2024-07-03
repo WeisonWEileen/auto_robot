@@ -8,22 +8,22 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    pose_controller_node = Node(
-        package="rc_controller",
-        executable="posecontrollerNode",
-        namespace="",
-        output="screen",
-        emulate_tty=True,
-        parameters=[
-            {
-                "x_controller_": [0.0, 0.0, 0.0, 0.0, 10.0],
-                "y_controller_": [0.0, 0.0, 0.0, 0.0, 10.0],
-                "yaw_controller_": [1.0, 0.0, 0.0, 0.0, 0.0],
-                "scale_factor_": 3.0,
-            }
-        ],
-        arguments=["--ros-args", "--log-level", "info"],
-    )
+    # pose_controller_node = Node(
+    #     package="rc_controller",
+    #     executable="posecontrollerNode",
+    #     namespace="",
+    #     output="screen",
+    #     emulate_tty=True,
+    #     parameters=[
+    #         {
+    #             "x_controller_": [0.0, 0.0, 0.0, 0.0, 10.0],
+    #             "y_controller_": [0.0, 0.0, 0.0, 0.0, 10.0],
+    #             "yaw_controller_": [1.0, 0.0, 0.0, 0.0, 0.0],
+    #             "scale_factor_": 3.0,
+    #         }
+    #     ],
+    #     arguments=["--ros-args", "--log-level", "info"],
+    # )
 
     state_collector_node = Node(
         package="rc_state_collector",
@@ -34,7 +34,7 @@ def generate_launch_description():
         parameters=[
             {
                 # 注意第三个是以pi为单位的
-                "desire_pose": [0.0, 0.0, 0.5],
+                "desire_pose": [0.0, -3.31, 90.0],
                 "scale_factor": 1.0,
                 # "y_controller_": [1.0, 0.0, 0.0, 0.0, 10.0],
                 # "yaw_controller_": [0.0, 0.0, 0.0, 0.0, 0.0],

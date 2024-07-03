@@ -4,6 +4,11 @@
 #define Area_22_YThres -3.5
 #define Area_23_XThres 9.0
 
+// 终端日志
+// 红色：对应的是雷达位置更新信息
+// 黄色：对应的是PID控制器的输出
+// 灰色：对应的是rc_state_collector给的命令
+
 namespace rc_controller {
 
 PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
@@ -11,7 +16,6 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
   RCLCPP_INFO(this->get_logger(), "Starting PoseController node!");
 
   init_PID();
-
 
   // Fastlio
   //实时订阅Mid360发出来的当前位姿信息
@@ -43,8 +47,6 @@ void PoseControllerNode::init_PID() {
                                                {0.0, 0.0, 0.0, 0.0, 0.0});
   this->declare_parameter<std::vector<double>>("yaw_controller_",
                                                {0.0, 0.0, 0.0, 0.0, 0.0});
-  this->declare_parameter<double>("scale_factor_", 1.0);
-
 
   std::vector<double> x_pid_param =
       this->get_parameter("x_controller_").as_double_array();
@@ -52,7 +54,6 @@ void PoseControllerNode::init_PID() {
       this->get_parameter("y_controller_").as_double_array();
   std::vector<double> yaw_pid_param =
       this->get_parameter("yaw_controller_").as_double_array();
-  scale_factor_ = this->get_parameter("scale_factor_").as_double();
 
   // @TODO yaml添加pid初始化结构体的struct定义
   x_controller_ = std::make_unique<PIDController>(x_pid_param);
@@ -64,8 +65,6 @@ void PoseControllerNode::init_PID() {
 void PoseControllerNode::poseUpdate_callback(
     const nav_msgs::msg::Odometry::ConstSharedPtr msg) {
 
-  
-
   // 先直接获取x和y
   auto current_x = msg->pose.pose.position.x;
   auto current_y = msg->pose.pose.position.y;
@@ -73,9 +72,9 @@ void PoseControllerNode::poseUpdate_callback(
   // 根据现在的位置直接发布位置模式
 
   // 如果机器人在1区
-  if ( position_mode_.data == 0 ) {
+  if (position_mode_.data == 0) {
     if (current_x < Area_12_XThres && current_y < Area_22_YThres) {
-    // 还在跑第一段线段,继续跑
+      // 还在跑第一段线段,继续跑
       position_mode_.data = 0;
       position_mode_pub_->publish(position_mode_);
     } else if (current_x > Area_12_XThres && current_y < Area_22_YThres) {
@@ -95,16 +94,14 @@ void PoseControllerNode::poseUpdate_callback(
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
 
-  RCLCPP_WARN(this->get_logger(), "x: %f, y: %f, yaw: %f", current_x, current_y,
-              yaw);
+  // 只是想要红色的输出，并不是ERROR
+  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,
+               current_y, yaw);
 
   current_pose_.x = current_x;
   current_pose_.y = current_y;
   current_pose_.yaw = yaw;
 
-  x_controller_->setMeasure(current_x);
-  y_controller_->setMeasure(current_y);
-  yaw_controller_->setMeasure(yaw);
 }
 
 void PoseControllerNode::poseCommand_callback(
@@ -114,30 +111,28 @@ void PoseControllerNode::poseCommand_callback(
   // publish the control commands
 
   // @TODO 后续可以取消
-  RCLCPP_INFO_STREAM(this->get_logger(), "Input_Desired x: " << msg->x<< ", y: " << msg->y << ", yaw: " << msg->z);
+  RCLCPP_INFO_STREAM(this->get_logger(),
+                     "Input_Desired x: " << msg->x << ", y: " << msg->y
+                                         << ", yaw: " << msg->z);
 
   geometry_msgs::msg::Twist twist_msg;
 
-
-  //给定当前的yaw，转换为世界坐标系下的desire_x，desire_y的平移速度，desire_yaw的不需要改
-  // 这里面是已经算法差值的，所以下面输出控制器的时候不需要再给measure，直接给measure 0.0
-  Pose world_target_pose = target_xy_transform(msg->x, msg->y, msg->z);
-
-  RCLCPP_INFO_STREAM(this->get_logger(),
-                     "After cordinate transform x: " << world_target_pose.x
-                                         << ", y: " << world_target_pose.y
-                                         << ", yaw: " << world_target_pose.yaw);
-
   // 注意这里z是直接对应的yaw轴的转定角度
-  twist_msg.linear.x = x_controller_->pidCalculate(0.0, world_target_pose.x);
-  twist_msg.linear.y = y_controller_->pidCalculate(0.0, world_target_pose.y);
-  twist_msg.angular.z = yaw_controller_->pidCalculate(0.0, world_target_pose.yaw);
+  // twist_msg.linear.x = x_controller_->pidCalculate(0.0, world_target_pose.x);
+  twist_msg.linear.x = x_controller_->pidCalculate(current_pose_.x, msg->x);
+  // twist_msg.linear.y = y_controller_->pidCalculate(0.0, world_target_pose.y);
+  twist_msg.linear.y = y_controller_->pidCalculate(current_pose_.y, msg->y);
+  // measure_yaw,测量到的角度
+  twist_msg.linear.z = current_pose_.yaw;
+  // desire_yaw，目标值
+  twist_msg.angular.z = msg->z;
 
   // @TODO 后续可以取消
-  RCLCPP_INFO_STREAM(this->get_logger(),
-                     "Output_of_chasis x: " << twist_msg.linear.x
-                                            << ", y: " << twist_msg.linear.y
-                                            << ", yaw: " << twist_msg.angular.z);
+  RCLCPP_WARN_STREAM(this->get_logger(),
+                     "Output_of_v x: "
+                         << twist_msg.linear.x << ", y: " << twist_msg.linear.y
+                         << ", desire_yaw: " << twist_msg.angular.z
+                         << ", measure_yaw: " << twist_msg.linear.z);
 
   cmd_pub_->publish(twist_msg);
 }
@@ -146,12 +141,11 @@ PIDController::PIDController(std::vector<double> pid_param) {
   kp_ = pid_param[0];
   ki_ = pid_param[1];
   kd_ = pid_param[2];
-  maxOut_ = pid_param[3];
-  integral_lim_ = pid_param[4];
+  maxOut_ = pid_param[4];
+  integral_lim_ = pid_param[3];
 }
 
 double PIDController::pidCalculate(double current, double desire_value) {
-  //注意measure_在另外一个线程中得到更新
 
   err_ = desire_value - current;
   Pout_ = kp_ * err_;
@@ -176,7 +170,6 @@ double PIDController::pidCalculate(double current, double desire_value) {
   }
 
   last_err_ = err_;
-  // last_measure_ = measure_;
   last_dout_ = Dout_;
 
   return output_;
@@ -192,16 +185,18 @@ Pose PoseControllerNode::target_xy_transform(double desire_world_x,
   world_target_pose.x =
       cos(current_pose_.yaw) * (desire_world_x - current_pose_.x) -
       sin(current_pose_.yaw) * (desire_world_y - current_pose_.y);
-  world_target_pose.y = sin(current_pose_.yaw) * (desire_world_x-current_pose_.x) + cos(current_pose_.yaw) * (desire_world_y - current_pose_.y);
+  world_target_pose.y =
+      sin(current_pose_.yaw) * (desire_world_x - current_pose_.x) +
+      cos(current_pose_.yaw) * (desire_world_y - current_pose_.y);
 
   world_target_pose.yaw = desire_yaw - current_pose_.yaw;
   if (world_target_pose.yaw > Pai) {
-    world_target_pose.yaw -= Pai;
+    world_target_pose.yaw -= 2 * Pai;
   } else if (world_target_pose.yaw < -Pai) {
-    world_target_pose.yaw += Pai;
+    world_target_pose.yaw += 2 * Pai;
   }
 
-    return world_target_pose;
+  return world_target_pose;
 }
 
 } // namespace rc_controller

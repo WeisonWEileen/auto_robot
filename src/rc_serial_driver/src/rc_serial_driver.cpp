@@ -176,8 +176,20 @@ namespace rc_serial_driver
 
         packet.cmd_vx = msg->cmd_vx;
         packet.cmd_vy = msg->cmd_vy;
-        packet.measure_yaw = msg->desire_yaw;
-        packet.desire_yaw = msg->measure_yaw;
+        packet.desire_yaw = msg->desire_yaw;
+        packet.measure_yaw = msg->measure_yaw;
+        
+        // packet.cmd_vx = 0;
+        // packet.cmd_vy = 0;
+        // packet.desire_yaw = 0;
+        // packet.measure_yaw = 0;
+        // packet.x_dot = msg-> ball_x;
+        // packet.y_dot = msg-> ball_y;
+        
+        RCLCPP_INFO_STREAM(this->get_logger(),"serial x y yaw " << packet.cmd_vx << " " << packet.cmd_vy  << " " << packet.desire_yaw);
+
+        // RCLCPP_WARN_STREAM(this->get_logger(),"the output is"<<packet.cmd_vx<<" " <<packet.cmd_vy<<" "<< packet.desire_yaw);
+
 
         std::vector<uint8_t> data = toVector(packet);
 

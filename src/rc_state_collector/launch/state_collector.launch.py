@@ -34,7 +34,7 @@ def generate_launch_description():
         parameters=[
             {
                 # 注意第三个是以pi为单位的
-                "desire_pose": [0.0, -3.31, 90.0],
+                "desire_pose": [0.0, -3.389891, 90.0],
                 "scale_factor": 1.0,
                 # "y_controller_": [1.0, 0.0, 0.0, 0.0, 10.0],
                 # "yaw_controller_": [0.0, 0.0, 0.0, 0.0, 0.0],

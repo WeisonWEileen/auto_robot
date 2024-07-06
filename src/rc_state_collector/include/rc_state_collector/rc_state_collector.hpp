@@ -8,11 +8,12 @@
 #include "rc_interface_msgs/msg/motion.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/int32.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "yolov8_msgs/msg/key_point3_d.hpp"
+#include "std_msgs/msg/string.hpp"+
+// #include "yolov8_msgs/msg/key_point3_d.hpp"
 #include <chrono>
 #include <rclcpp/rclcpp.hpp>
 #include <vector>
+#include "yolov8_msgs/msg/key_point3_d_array.hpp"
 
 #define PI 3.1415926
 
@@ -77,20 +78,24 @@ private:
   geometry_msgs::msg::Point desire_pose_msg1_;
   geometry_msgs::msg::Point desire_pose_msg2_;
   geometry_msgs::msg::Point desire_pose_msg3_;
+  geometry_msgs::msg::Point desire_pose_msg4_;
 
   // 订阅目标球的三维坐标
-  rclcpp::Subscription<yolov8_msgs::msg::KeyPoint3D>::SharedPtr
+  rclcpp::Subscription<yolov8_msgs::msg::KeyPoint3DArray>::SharedPtr
       ball_target_sub_;
   std::array<float, 2> target_ball_;
+
+  // 订阅位置模式
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr position_mode_sub;
 
   // 定时发布机器人的运动信息
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<rc_interface_msgs::msg::Motion>::SharedPtr motion_pub_;
   void robo_state_callback();
 
-  // 用于订阅一开始的位置状态
-  rclcpp::Subscription<const sensor_msgs::msg::Image::SharedPtr>
-      ares_detector_sub_;
+  // // 用于订阅一开始的位置状态
+  // rclcpp::Subscription<const sensor_msgs::msg::Image::SharedPtr>
+  //     ares_detector_sub_;
 };
 } // namespace rc_state_collector
 

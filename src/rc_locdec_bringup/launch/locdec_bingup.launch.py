@@ -7,7 +7,7 @@ sys.path.append(
 )
 
 node_params = os.path.join(
-    get_package_share_directory("rc_locdec_bringup"), "config", "node_params.yaml"
+    get_package_share_directory("rc_locdec_bringup"), "config", "node_param_blue.yaml"
 )
 
 print(f"--------------------------Node parameters file: {node_params}")
@@ -40,7 +40,7 @@ def generate_launch_description():
             parameters=[node_params],
             ros_arguments=[
                 "--ros-args",
-                # "--log-level",
+                "--log-level","info"
             ],
             on_exit=Shutdown(),
         )
@@ -82,13 +82,16 @@ def generate_launch_description():
 
     # ------------------------------#
     # --------serial driver---------#
+    config = os.path.join(
+        get_package_share_directory('rc_serial_driver'), 'config', 'serial_driver.yaml')
+
     rc_serial_driver_node = Node(
-        package="rc_serial_driver",
-        executable="rc_serial_driver_node",
-        namespace="",
-        output="screen",
+        package='rc_serial_driver',
+        executable='rc_serial_driver_node',
+        namespace='',
+        output='screen',
         emulate_tty=True,
-        parameters=[node_params],
+        parameters=[config],
     )
     # --------serial driver---------#
     # ------------------------------#

@@ -29,6 +29,7 @@ namespace rc_serial_driver
       float measure_yaw;
       float x_dot = 0.0f;
       float y_dot = 0.0f;
+      uint8_t robo_state;
       uint8_t d;
       uint8_t tail = 43;
       // uint16_t checksum

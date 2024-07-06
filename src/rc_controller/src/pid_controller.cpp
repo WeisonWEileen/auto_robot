@@ -1,4 +1,5 @@
 #include "rc_controller/pid_controller.hpp"
+#include <chrono>
 
 #define Area_12_XThres 6.0
 #define Area_22_YThres -3.5
@@ -38,7 +39,7 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
       this->create_publisher<std_msgs::msg::Int32>("/rc/position_mode", 10);
 
   // 订阅rc_state_collector目标位姿信息
-  poseCommand_sub_ = this->create_subscription<geometry_msgs::msg::Point>(
+  poseCommand_sub_ = this->create_subscription<rc_interface_msgs::msg::Motion>(
       "/rc/desire_pose", rclcpp::SensorDataQoS(),
       std::bind(&PoseControllerNode::poseCommand_callback, this,
                 std::placeholders::_1));
@@ -75,10 +76,20 @@ void PoseControllerNode::get_desireLoc(){
 
   // 距离到达的阈值
 
+
+
+
+
+
+
+
+
+
   // desire Pose 1
-  this->declare_parameter<std::vector<double>>("desire_pose1", {0.0, 0.0, 0.0});
+  
+  this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose1 =
-      this->get_parameter("desire_pose1").as_double_array();
+      this->get_parameter("desire_pose").as_double_array();
   desire_pose1_.x =   desire_pose1[0];
   desire_pose1_.y =   desire_pose1[1];
   desire_pose1_.yaw = desire_pose1[2];
@@ -99,6 +110,21 @@ void PoseControllerNode::get_desireLoc(){
   desire_pose3_.x = desire_pose3[0];
   desire_pose3_.y = desire_pose3[1];
   desire_pose3_.yaw = desire_pose3[2];
+
+  // desire Pose 4 取球点1
+  this->declare_parameter<std::vector<double>>("desire_pose4", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose4 =
+      this->get_parameter("desire_pose4").as_double_array();
+  desire_pose4_.x = desire_pose3[0];
+  desire_pose4_.y = desire_pose3[1];
+  desire_pose4_.yaw = desire_pose3[2];
+
+  //position_mode change thres
+    this->declare_parameter<float>("dis_thres", 0.2);
+  euclidisThres_ =
+      this->get_parameter("dis_thres").as_double();
+
+  //;
 }
 
 // 订阅mid360的驱动接口
@@ -118,43 +144,97 @@ void PoseControllerNode::poseUpdate_callback(
   yaw = yaw*180.0f/3.1415926f;
 
   // 只是想要红色的输出，并不是ERROR
-  RCLCPP_ERROR(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,current_y, yaw);
+  RCLCPP_INFO(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,current_y, yaw);
 
   // 机器人区域状态切换
   // 如果机器人在状态1，那么就是1-2，运动到2去
 
-
   if (position_mode_.data == 0) 
   {
-      if (euclidis(current_x,current_y,yaw,desire_pose1_.x,desire_pose1_.y,desire_pose1_.yaw) < euclidisThres_ ) {
+      double current_thres = euclidis(current_x,current_y,0,desire_pose1_.x,desire_pose1_.y,0); 
+      RCLCPP_ERROR_STREAM(this->get_logger(), "current thres is " << current_thres);
+      if (current_thres > euclidisThres_ ) {
         // 还在跑第一段线段,继续跑
+        // position_mode_.data = 1;
+      }
+      //小于阈值，位置模式设置成2
+      else{
+      //std::this_thread::sleep_for(std::chrono::seconds(1));
+
         position_mode_.data = 1;
+
       }
   }
 
-  // 如果机器人在状态2，那么就是2-2，运动到2下面去
+  // 如果机器人在状态2，那么就是2-2，运动到2下面
   else if (position_mode_.data == 1) {
-    if (euclidis(current_x, current_y, yaw, desire_pose2_.x, desire_pose2_.y,desire_pose2_.yaw) < euclidisThres_){
+    double current_thres = euclidis(current_x,current_y,0,desire_pose2_.x,desire_pose2_.y,0); 
+      RCLCPP_ERROR_STREAM(this->get_logger(), "current thres is " << current_thres);
+    if (current_thres > euclidisThres_){
       // 还在跑第一段线段,继续跑
-      position_mode_.data = 2;
     } 
-  }
-
-  else if (position_mode_.data == 2)
-  {
-    if (euclidis(current_x, current_y, yaw, desire_pose3_.x, desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
-      // 还在跑第一段线段,继续跑
-      position_mode_.data = 3;
-    } else {
-      // 已经跑到了范围内部
+    else{
+      // 延时一秒，防止超调
+      //std::this_thread::sleep_for(std::chrono::seconds(1));
+      position_mode_.data = 2;
     }
   }
+  else if (position_mode_.data == 2) {
+    double current_thres = euclidis(current_x,current_y,0,desire_pose3_.x,desire_pose3_.y,0); 
+      RCLCPP_ERROR_STREAM(this->get_logger(), "current thres is " << current_thres);
+    if (current_thres > euclidisThres_){
+      // 还在跑第一段线段,继续跑
+    } 
+    else{
+      // 延时一秒，防止超调
+      //std::this_thread::sleep_for(std::chrono::seconds(1));
+      position_mode_.data = 3;
+    }
+  }
+  else if (position_mode_.data == 3) {
+  double current_thres = euclidis(current_x,current_y,0,desire_pose4_.x,desire_pose4_.y,0); 
+      RCLCPP_ERROR_STREAM(this->get_logger(), "current thres is " << current_thres);
+    if (current_thres > euclidisThres_){
+      // 还在跑第一段线段,继续跑
+    } 
+    else{
+      // 延时一秒，防止超调
+      //std::this_thread::sleep_for(std::chrono::seconds(1));
+      position_mode_.data = 4;
+    }
+  }
+  else if (position_mode_.data == 4) {
+    double current_thres = euclidis(current_x,current_y,0,desire_pose3_.x,desire_pose3_.y,0); 
+      RCLCPP_ERROR_STREAM(this->get_logger(), "current thres is " << current_thres);
+    if (current_thres > euclidisThres_){
+      // 还在跑第一段线段,继续跑
+    } 
+    else{
+      // 延时一秒，防止超调
+      //std::this_thread::sleep_for(std::chrono::seconds(1));
+      position_mode_.data = 3;
+    }
+  }
+  // else{
+    
+      // position_mode_.data = 2;
+  // }
+
+  // else if (position_mode_.data == 2)
+  // {
+  //   if (euclidis(current_x, current_y, yaw, desire_pose3_.x, desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
+  //     // 还在跑第一段线段,继续跑
+  //     position_mode_.data = 3;
+  //   } else {
+  //     // 已经跑到了范围内部
+  //     }
+  //   }
   
 
   current_pose_.x = current_x;
   current_pose_.y = current_y;
   current_pose_.yaw = yaw;
-
+  RCLCPP_ERROR_STREAM(this->get_logger(),"Publisher mode " << position_mode_.data);
   position_mode_pub_->publish(position_mode_);
 }
 
@@ -163,30 +243,54 @@ inline double PoseControllerNode::euclidis(double x1, double x2, double x3, doub
 }
 
 void PoseControllerNode::poseCommand_callback(
-    const geometry_msgs::msg::Point::ConstSharedPtr msg) {
+    const rc_interface_msgs::msg::Motion::ConstSharedPtr msg) {
   // do something with the pose
   // call the PID controllers
   // publish the control commands
 
   // @TODO 后续可以取消
   RCLCPP_INFO_STREAM(this->get_logger(),
-                     "Input_Desired x: " << msg->x << ", y: " << msg->y
-                                         << ", yaw: " << msg->z);
+                     "Input_Desired x: " << msg->cmd_vx << ", y: " << msg->cmd_vy
+                                         << ", yaw: " << msg->desire_yaw);
 
-  // geometry_msgs::msg::Twist twist_msg;
+  //现在这里效率不够高，后面考虑直接只用统一分量数据进行拷贝
 
   rc_interface_msgs::msg::Motion motion_msg;
 
+ //Pose world_target_pose = target_xy_transform(msg->cmd_vx, msg->cmd_vy, msg->desire_yaw);
+
+  // RCLCPP_INFO_STREAM(this->get_logger(), "After transformationx Input: x" << world_target_pose.x << ", y"<< world_target_pose.y  );
+
+  
+
   // 注意这里z是直接对应的yaw轴的转定角度
   // twist_msg.linear.x = x_controller_->pidCalculate(0.0, world_target_pose.x);
-  motion_msg.cmd_vx = x_controller_->pidCalculate(current_pose_.x, msg->x);
+  
+  motion_msg.cmd_vx = x_controller_->pidCalculate(current_pose_.x, msg->cmd_vx);
+  
+  // 臂的调试
+  // motion_msg.cmd_vx = 0;
   // twist_msg.linear.y = y_controller_->pidCalculate(0.0, world_target_pose.y);
-  motion_msg.cmd_vy = y_controller_->pidCalculate(current_pose_.y, msg->y);
+  
+  motion_msg.cmd_vy = y_controller_->pidCalculate(current_pose_.y, msg->cmd_vy);
+  
+  // 臂的调试
+  // motion_msg.cmd_vy = 0;
+
   // desire_yaw，目标值
-  motion_msg.desire_yaw = msg->z;
+  motion_msg.desire_yaw = msg->desire_yaw;
+  
+
+  // 臂的调试
+  // motion_msg.desire_yaw = 0;
+  
+  RCLCPP_WARN_STREAM(this->get_logger(),"fuck you" << motion_msg.desire_yaw);
 
   // measure_yaw,测量到的角度
   motion_msg.measure_yaw = current_pose_.yaw;
+
+  motion_msg.ball_x = msg->ball_x;
+  motion_msg.ball_y = msg->ball_y;
 
   // @TODO 后续可以取消
   RCLCPP_WARN_STREAM(this->get_logger(),
@@ -236,25 +340,30 @@ double PIDController::pidCalculate(double current, double desire_value) {
   return output_;
 }
 
+
+// 用于转换到世界坐标系下应有的x和y的pid控制器输入值
+// 由于yaw放在下位机闭环相应很快，并且没有超调，所以可以近似认为desire_yaw就是current_yaw
+
 Pose PoseControllerNode::target_xy_transform(double desire_world_x,
                                              double desire_world_y,
                                              double desire_yaw) {
 
   Pose world_target_pose;
 
+  // 由于desire_yaw的相应速度非常快，所以根本不需要考虑c current yaw
   world_target_pose.x =
-      cos(current_pose_.yaw) * (desire_world_x - current_pose_.x) -
-      sin(current_pose_.yaw) * (desire_world_y - current_pose_.y);
-  world_target_pose.y =
-      sin(current_pose_.yaw) * (desire_world_x - current_pose_.x) +
-      cos(current_pose_.yaw) * (desire_world_y - current_pose_.y);
+      cos(desire_yaw) * (desire_world_x - current_pose_.x) -
+      sin(desire_yaw) * (desire_world_y - current_pose_.y);
+  world_target_pose.y = 
+     -sin(desire_yaw) * (desire_world_x - current_pose_.x) + 
+      cos(desire_yaw) * (desire_world_y - current_pose_.y);
 
-  world_target_pose.yaw = desire_yaw - current_pose_.yaw;
-  if (world_target_pose.yaw > Pai) {
-    world_target_pose.yaw -= 2 * Pai;
-  } else if (world_target_pose.yaw < -Pai) {
-    world_target_pose.yaw += 2 * Pai;
-  }
+  world_target_pose.yaw = desire_yaw;
+  // if (world_target_pose.yaw > Pai) {
+  //   world_target_pose.yaw -= 2 * Pai;
+  // } else if (world_target_pose.yaw < -Pai) {
+  //   world_target_pose.yaw += 2 * Pai;
+  // }
 
   return world_target_pose;
 }

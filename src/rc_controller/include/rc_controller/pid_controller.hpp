@@ -87,6 +87,8 @@ private:
   Pose desire_pose1_;
   Pose desire_pose2_;
   Pose desire_pose3_;
+  Pose desire_pose4_;
+
   float euclidisThres_;
 
   // 发布运动控制指令
@@ -104,9 +106,9 @@ private:
                          double y3);
 
   // 订阅决策目标位置,z直接对应yaw轴
-  rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr poseCommand_sub_;
+  rclcpp::Subscription<rc_interface_msgs::msg::Motion>::SharedPtr poseCommand_sub_;
   void
-  poseCommand_callback(const geometry_msgs::msg::Point::ConstSharedPtr msg);
+  poseCommand_callback(const rc_interface_msgs::msg::Motion::ConstSharedPtr msg);
 
   // 记录当前的x,y,yaw位姿，mid360订阅更新
   Pose current_pose_;

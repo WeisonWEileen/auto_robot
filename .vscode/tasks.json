@@ -27,5 +27,11 @@
             "command": "ros2 launch rc_state_collector state_collector.launch.py ",
             "problemMatcher": "$gcc"
         },
+        {
+            "label": "Debug inference Node ",
+            "detail": "purely using gdb prefix to start node",
+            "type": "shell",
+            "command": "ros2 run --prefix 'gdb -ex run --args' armor_detector rc_armor_detector_node"
+        },
 	]
 }

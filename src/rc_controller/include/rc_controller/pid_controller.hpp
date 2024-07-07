@@ -4,12 +4,20 @@
 #define Pai 3.1415926
 // 这是控制层的PID控制器，用于控制机器人的运动
 
+// self defined ros msgs
+#include "rc_interface_msgs/msg/motion.hpp"
+#include "rc_interface_msgs/srv/init_pos.hpp"
+
 #include <cmath>
+// #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <image_transport/image_transport.hpp>
+#include <image_transport/subscriber_filter.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include "rc_interface_msgs/msg/motion.hpp"
+#include <opencv2/core.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <tf2/LinearMath/Quaternion.h>
@@ -112,7 +120,28 @@ private:
 
   // 记录当前的x,y,yaw位姿，mid360订阅更新
   Pose current_pose_;
-  float scale_factor_;
+  
+  // 订阅上方的摄像头位置
+  rclcpp::Client<rc_interface_msgs::srv::InitPos>::SharedPtr init_pos_client_;
+      // 判断在一区还是二区而决定是否要进行坐标偏置
+  float offet_;
+
+
+  // 使用插值提高雷达的频率
+  // float current_pose_ = 0.0f;
+  float x_pose_ = 0.0f;
+  float x_last_pose_ = 0.0f;
+  // float x_llast_pose_ = 0.0f;
+
+  float y_pose_ = 0.0f;
+  float y_last_pose_ = 0.0f;
+
+  int maxn_ = 10;
+  int n_ = 0;
+
+  // 这个还要看雷达飘多少
+  // 在我现在的位置上测得最高飘0.08m左右
+  float inte_thres_ = 0.08f;
 };
 
 } // namespace rc_controller

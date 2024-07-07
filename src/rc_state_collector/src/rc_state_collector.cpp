@@ -1,62 +1,100 @@
 // Copyright 2024 Weison_Pan
 
-// #include <opencv2/core.hpp>
-// #include <opencv2/imgproc.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <rc_state_collector/rc_state_collector.hpp>
 
 namespace rc_state_collector {
 
 StateCollectorNode::StateCollectorNode(
     const rclcpp::NodeOptions &options = rclcpp::NodeOptions())
-    : Node("state_collector", options), robo_mode_(0),
-      area_mode_(0), target_ball_({0.0f,0.0f}) {
+    : Node("state_collector", options), robo_mode_(0), area_mode_(0),
+      realsense_ball_({0.0f, 0.0f}), v4l2_ball_({0.0f, 0.0f}),
+      attach_state_(0) {
 
   RCLCPP_INFO(this->get_logger(), "StateCollectorNode has been started.");
 
   getParam();
 
-
-  
   rim_state_sub_ = this->create_subscription<std_msgs::msg::Int32>(
       "/rc/vision_rimstate", 10, [this](std_msgs::msg::Int32::SharedPtr msg) {
         this->rim_mode_ = msg->data;
       });
 
-  // ares_detector_sub_ = this->create_subscription<const sensor_msgs::msg::Image>(
-  //     "/image_raw", 10, [this](sensor_msgs::msg::Image::ConstSharedPtr &msg)
-  //     {
-  //       // 直接检测开机的状态设置启动的robomode
-  //       cv::Mat start_frame = cv_bridge::toCvCopy(msg,"bgr8")->image;
+  // 好像能够开机的时候检测运动的脚本
 
-        
+  // ares_detector_sub_
+  //   ares_detector_sub_ = this->create_subscription<const
+  //   sensor_msgs::msg::Image>(
+  //       "/image_raw", 10, [this](sensor_msgs::msg::Image::ConstSharedPtr
+  //       &msg)
+  //       {
+  //         // 直接检测开机的状态设置启动的robomode
+  //         cv::Mat start_frame = cv_bridge::toCvCopy(msg,"bgr8")->image;
+  //   });
 
-  //        });
+  //订阅气压泵传过来的是否收到了球
+  attach_state_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+      "/rc_desicion/attach_state_mode",
+      10, [this](std_msgs::msg::Bool::SharedPtr msg) {
+         attach_state_ = msg->data;
+         RCLCPP_INFO_STREAM(this->get_logger(),
+                            "the attach state is " << attach_state_);
+  });
 
   // 订阅pid控制器（获取imd360输出位置信息）发出来的位置默认
-  position_mode_sub = this->create_subscription<std_msgs::msg::Int32>(
-    "rc/position_mode",10,[this](std_msgs::msg::Int32::SharedPtr msg){
-      robo_mode_ = msg->data;
-      RCLCPP_WARN_STREAM(this->get_logger(),"The position mode is " << robo_mode_);
-    }
-  );
+  position_mode_sub =
+      this->create_subscription<std_msgs::msg::Int32>(
+          "/rc/position_mode", 10, [this](std_msgs::msg::Int32::SharedPtr msg)
+          {
+            robo_mode_ = msg->data;
+            RCLCPP_WARN_STREAM(this->get_logger(),
+                               "The position mode is " << robo_mode_); });
 
-  // 订阅决策出来的目标球的三维坐标信息,由于球的高度是一定的，所以只用了二维信息
-  ball_target_sub_ =
+  // 订阅决策出来的目标球的三维坐标信息,由于球的高度是一定的，所以只用了二维信息,这边是没有加框的
+  realsense_ball_sub_ =
       this->create_subscription<yolov8_msgs::msg::KeyPoint3DArray>(
           "/rc_decision/keypoint3d", rclcpp::SensorDataQoS(),
-          [this](yolov8_msgs::msg::KeyPoint3DArray::SharedPtr msg)
-          {
-            if(!msg->data.empty()){
-              auto first_ball= msg->data[0];
-              target_ball_[0] = first_ball.point.x; 
-              target_ball_[1] = first_ball.point.y;
-              RCLCPP_INFO_STREAM(this->get_logger(), "receiver: " <<target_ball_[0]<<" "<<target_ball_[1] ) ;
-            }
-            else{
-            target_ball_[0] = 0;
-            target_ball_[1] = 0;
+          [this](yolov8_msgs::msg::KeyPoint3DArray::SharedPtr msg) {
+            if (!msg->data.empty()) {
+              auto first_ball = msg->data[0];
+              realsense_ball_[0] = first_ball.point.x;
+              realsense_ball_[1] = first_ball.point.y;
+              RCLCPP_INFO_STREAM(this->get_logger(),
+                                 "receiver: " << realsense_ball_[0] << " "
+                                              << realsense_ball_[1]);
+            } else {
+              realsense_ball_[0] = 0;
+              realsense_ball_[1] = 0;
             }
           });
+
+  v4l2_ball_sub_ = this->create_subscription<yolov8_msgs::msg::DetectionArray>(
+      "/v4l2/results", 10,
+      [this](yolov8_msgs::msg::DetectionArray::SharedPtr msg) {
+        if (!msg->detections.empty()) {
+
+          // Find the element with the smallest x value
+          auto min_x_element = std::min_element(
+              msg->detections.begin(), msg->detections.end(),
+              [](const auto &a, const auto &b) {
+                return a.bbox.center.position.x < b.bbox.center.position.x;
+              });
+
+          // Check if min_x_element is valid and points to an element within the
+          // vector
+          if (min_x_element != msg->detections.end()) {
+            // min_x_element points to the element with the smallest x
+            // Do something with *min_x_element, for example, print it
+            RCLCPP_INFO_STREAM(this->get_logger(),
+                               "Element with smallest x: "
+                                   << min_x_element->bbox.center.position.x);
+          } else {
+            v4l2_ball_[0] = 0.0f;
+            v4l2_ball_[1] = 0.0f;
+          }
+        }
+      });
 
   // 定时回调发布机器人的运动命令
   timer_ = this->create_wall_timer(
@@ -74,35 +112,37 @@ void StateCollectorNode::robo_state_callback() {
   // 注意这里的x,y并没有进行解算，在rc_controller里面进行解算
   // 然后结构体里面的 measure_yaw 由controller中得到更新，这里面并没有进行赋值
   rc_interface_msgs::msg::Motion msg;
-  msg.ball_x = target_ball_[0];
-  msg.ball_y = target_ball_[1];
-  if(robo_mode_ == 0){
+  msg.ball_x = realsense_ball_[0];
+  msg.ball_y = realsense_ball_[1];
+  if (robo_mode_ == 0) {
     msg.cmd_vx = desire_pose_msg1_.x;
     msg.cmd_vy = desire_pose_msg1_.y;
-    msg.desire_yaw = desire_pose_msg1_.z;}
+    msg.desire_yaw = desire_pose_msg1_.z;
+  }
 
-  else if(robo_mode_ == 1){
+  else if (robo_mode_ == 1) {
     msg.cmd_vx = desire_pose_msg2_.x;
     msg.cmd_vy = desire_pose_msg2_.y;
     msg.desire_yaw = desire_pose_msg2_.z;
-  }
-  else if(robo_mode_ == 2){
+  } else if (robo_mode_ == 2) {
     msg.cmd_vx = desire_pose_msg3_.x;
     msg.cmd_vy = desire_pose_msg3_.y;
     msg.desire_yaw = desire_pose_msg3_.z;
-  }
-  else if(robo_mode_ == 3){
+  } else if (robo_mode_ == 3) {
+
     msg.cmd_vx = desire_pose_msg4_.x;
     msg.cmd_vy = desire_pose_msg4_.y;
     msg.desire_yaw = desire_pose_msg4_.z;
-  }
+  } else if (robo_mode_ == 4) {
+    // 代表有球，底盘不动
+    if (msg.ball_x != 0) {
+    }
 
-  else if(robo_mode_ == 4){
-    msg.cmd_vx = desire_pose_msg3_.x;
-    msg.cmd_vy = desire_pose_msg3_.y;
-    msg.desire_yaw = desire_pose_msg3_.z;
+    // msg.cmd_vx = desire_pose_msg3_.x;
+    // msg.cmd_vy = desire_pose_msg3_.y;
+    // msg.desire_yaw = desire_pose_msg3_.z;
   }
-    motion_pub_->publish(msg);
+  motion_pub_->publish(msg);
 
   // 发布目标的运动信息，记得z代表的是yaw轴的角度
   // 启动的时候如果在1区，那么就是上2区的红色的点的地方
@@ -199,6 +239,7 @@ void StateCollectorNode::carried_state_callback(
     }
   }
 }
+
 } // namespace rc_state_collector
 
 #include "rclcpp_components/register_node_macro.hpp"

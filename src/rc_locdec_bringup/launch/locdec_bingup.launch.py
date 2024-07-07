@@ -7,7 +7,7 @@ sys.path.append(
 )
 
 node_params = os.path.join(
-    get_package_share_directory("rc_locdec_bringup"), "config", "node_param_blue.yaml"
+    get_package_share_directory("rc_locdec_bringup"), "config", "node_param_red.yaml"
 )
 
 print(f"--------------------------Node parameters file: {node_params}")

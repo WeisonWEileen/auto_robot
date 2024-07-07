@@ -96,6 +96,7 @@ private:
   Pose desire_pose2_;
   Pose desire_pose3_;
   Pose desire_pose4_;
+  Pose desire_pose5_;
 
   float euclidisThres_;
 

@@ -114,6 +114,8 @@ void StateCollectorNode::robo_state_callback() {
   rc_interface_msgs::msg::Motion msg;
   msg.ball_x = realsense_ball_[0];
   msg.ball_y = realsense_ball_[1];
+
+  // 0到4是 pid controller 决定的
   if (robo_mode_ == 0) {
     msg.cmd_vx = desire_pose_msg1_.x;
     msg.cmd_vy = desire_pose_msg1_.y;
@@ -135,13 +137,24 @@ void StateCollectorNode::robo_state_callback() {
     msg.desire_yaw = desire_pose_msg4_.z;
   } else if (robo_mode_ == 4) {
     // 代表有球，底盘不动
-    if (msg.ball_x != 0) {
-    }
+    // if()
+    // if (msg.ball_x != 0) {
+      // 臂找球
+      // msg.robo_state
+    msg.cmd_vx = desire_pose_msg5_.x;
+    msg.cmd_vy = desire_pose_msg5_.y;
+    msg.desire_yaw = desire_pose_msg5_.z;
+  } else if (robo_mode_ == 5) {
+
+    msg.cmd_vx = desire_pose_msg6_.x;
+    msg.cmd_vy = desire_pose_msg6_.y;
+    msg.desire_yaw = desire_pose_msg6_.z;
+  } 
 
     // msg.cmd_vx = desire_pose_msg3_.x;
     // msg.cmd_vy = desire_pose_msg3_.y;
     // msg.desire_yaw = desire_pose_msg3_.z;
-  }
+  // }
   motion_pub_->publish(msg);
 
   // 发布目标的运动信息，记得z代表的是yaw轴的角度
@@ -176,7 +189,7 @@ void StateCollectorNode::robo_state_callback() {
 
   // } else if (robo_mode_ == 2) {
   //   pose_pub_->publish(desire_pose_msg);
-}
+  }
 
 void StateCollectorNode::getParam() {
   // 用于测试
@@ -215,6 +228,15 @@ void StateCollectorNode::getParam() {
   desire_pose_msg4_.y = desire_pose4[1];
   // desire的角度
   desire_pose_msg4_.z = desire_pose4[2];
+
+  this->declare_parameter<std::vector<double>>("desire_pose5", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose5 =
+      this->get_parameter("desire_pose4").as_double_array();
+
+  desire_pose_msg5_.x = desire_pose5[0];
+  desire_pose_msg5_.y = desire_pose5[1];
+  // desire的角度
+  desire_pose_msg5_.z = desire_pose5[2];
 }
 
 void StateCollectorNode::carried_state_callback(

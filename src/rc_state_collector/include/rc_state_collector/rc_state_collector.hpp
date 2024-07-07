@@ -47,7 +47,6 @@ public:
 
   // ROBO_MODE_FINDBALL        4
   
-  
   // ROBO_MODE_PUTBALL         5
 
   // @TODO 这里还要写一个重试的接口
@@ -90,6 +89,8 @@ private:
   geometry_msgs::msg::Point desire_pose_msg2_; //上三区的第二个目标点
   geometry_msgs::msg::Point desire_pose_msg3_; //上三区的第三个目标点
   geometry_msgs::msg::Point desire_pose_msg4_; //找球的目标点，这里要求正对球框
+  geometry_msgs::msg::Point desire_pose_msg5_;
+  geometry_msgs::msg::Point desire_pose_msg6_;
 
   // 订阅目标球的 realsense 三维坐标，但是只取第二个维度的
   rclcpp::Subscription<yolov8_msgs::msg::KeyPoint3DArray>::SharedPtr

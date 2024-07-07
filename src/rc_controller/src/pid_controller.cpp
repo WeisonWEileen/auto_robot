@@ -67,7 +67,7 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
   //发布位置的信息
   position_mode_.data = 0;
   position_mode_pub_ =
-      this->create_publisher<std_msgs::msg::Int32>("//rc/position_mode", 10);
+      this->create_publisher<std_msgs::msg::Int32>("/rc/position_mode", 10);
 
   // 订阅rc_state_collector目标位姿信息
   poseCommand_sub_ = this->create_subscription<rc_interface_msgs::msg::Motion>(
@@ -235,30 +235,40 @@ void PoseControllerNode::poseUpdate_callback(
     } else {
       position_mode_.data = 3;
     }
+  } else if (position_mode_.data == 5) {
+    double current_thres =
+        euclidis(current_x, current_y, 0, desire_pose5_.x, desire_pose5_.y, 0);
+    RCLCPP_ERROR_STREAM(this->get_logger(),
+                        "current thres is " << current_thres);
+    if (current_thres > euclidisThres_) {
+      return;
+      // 还在跑第四段线段,继续跑
+    } else {
+      position_mode_.data = 3;
+    }}
+    // else{
+
+    // position_mode_.data = 2;
+    // }
+
+    // else if (position_mode_.data == 2)
+    // {
+    //   if (euclidis(current_x, current_y, yaw, desire_pose3_.x,
+    //   desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
+    //     // 还在跑第一段线段,继续跑
+    //     position_mode_.data = 3;
+    //   } else {
+    //     // 已经跑到了范围内部
+    //     }
+    //   }
+
+    current_pose_.x = current_x;
+    current_pose_.y = current_y;
+    current_pose_.yaw = yaw;
+    RCLCPP_ERROR_STREAM(this->get_logger(),
+                        "Publisher mode " << position_mode_.data);
+    position_mode_pub_->publish(position_mode_);
   }
-  // else{
-
-  // position_mode_.data = 2;
-  // }
-
-  // else if (position_mode_.data == 2)
-  // {
-  //   if (euclidis(current_x, current_y, yaw, desire_pose3_.x,
-  //   desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
-  //     // 还在跑第一段线段,继续跑
-  //     position_mode_.data = 3;
-  //   } else {
-  //     // 已经跑到了范围内部
-  //     }
-  //   }
-
-  current_pose_.x = current_x;
-  current_pose_.y = current_y;
-  current_pose_.yaw = yaw;
-  RCLCPP_ERROR_STREAM(this->get_logger(),
-                      "Publisher mode " << position_mode_.data);
-  position_mode_pub_->publish(position_mode_);
-}
 
 inline double PoseControllerNode::euclidis(double x1, double x2, double x3,
                                            double y1, double y2, double y3) {
@@ -295,25 +305,25 @@ void PoseControllerNode::poseCommand_callback(
   // static float thisx,lastx,llastx,n,maxn;
   // 两帧雷达数据之间的进行线性插值插值
  
-  if ((current_pose_.x - x_pose_) < inte_thres_) {
-    n_ = 0;
-    x_last_pose_ = current_pose_.x;
-  }
-  x_pose_ = x_last_pose_ + (current_pose_.x - x_last_pose_) * n_ / maxn_;
+  // if ((current_pose_.x - x_pose_) < inte_thres_) {
+    // n_ = 0;
+    // x_last_pose_ = current_pose_.x;
+  // }
+  // x_pose_ = x_last_pose_ + (current_pose_.x - x_last_pose_) * n_ / maxn_;
 
-  motion_msg.cmd_vx = x_controller_->pidCalculate(x_pose_, msg->cmd_vx);
+  // motion_msg.cmd_vx = x_controller_->pidCalculate(x_pose_, msg->cmd_vx);
+  motion_msg.cmd_vx = x_controller_->pidCalculate(current_pose_.x, msg->cmd_vx);
 
+  // if ((current_pose_.y - y_pose_) < inte_thres_) {
+    // n_ = 0;
+    // y_last_pose_ = current_pose_.y;
+  // }
+  // y_pose_ = y_last_pose_ + (current_pose_.y - y_last_pose_) * n_ / maxn_;
 
-  if ((current_pose_.y - y_pose_) < inte_thres_) {
-    n_ = 0;
-    y_last_pose_ = current_pose_.y;
-  }
-  y_pose_ = y_last_pose_ + (current_pose_.y - y_last_pose_) * n_ / maxn_;
+  // n_ = n_ + 1;
 
-  n_ = n_ + 1;
-
-  motion_msg.cmd_vy = y_controller_->pidCalculate(y_pose_, msg->cmd_vy);
-
+  // motion_msg.cmd_vy = y_controller_->pidCalculate(y_pose_, msg->cmd_vy);
+  motion_msg.cmd_vy = y_controller_->pidCalculate(current_pose_.y, msg->cmd_vy);
 
   // 臂的调试
   // motion_msg.cmd_vx = 0;

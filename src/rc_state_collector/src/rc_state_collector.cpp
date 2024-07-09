@@ -33,7 +33,7 @@ StateCollectorNode::StateCollectorNode(
   //         cv::Mat start_frame = cv_bridge::toCvCopy(msg,"bgr8")->image;
   //   });
 
-  //订阅气压泵传过来的是否收到了球
+  //订阅气压泵传过来的是否收到了�?
   attach_state_sub_ = this->create_subscription<std_msgs::msg::Bool>(
       "/rc_desicion/attach_state_mode",
       10, [this](std_msgs::msg::Bool::SharedPtr msg) {
@@ -42,7 +42,7 @@ StateCollectorNode::StateCollectorNode(
                             "the attach state is " << attach_state_);
   });
 
-  // 订阅pid控制器（获取imd360输出位置信息）发出来的位置默认
+  // 订阅pid控制器（获取imd360输出位置信息）发出来的位置默�?
   position_mode_sub =
       this->create_subscription<std_msgs::msg::Int32>(
           "/rc/position_mode", 10, [this](std_msgs::msg::Int32::SharedPtr msg)
@@ -51,7 +51,7 @@ StateCollectorNode::StateCollectorNode(
             RCLCPP_WARN_STREAM(this->get_logger(),
                                "The position mode is " << robo_mode_); });
 
-  // 订阅决策出来的目标球的三维坐标信息,由于球的高度是一定的，所以只用了二维信息,这边是没有加框的
+  // 订阅决策出来的目标球的三维坐标信�?,由于球的高度是一定的，所以只用了二维信息,这边是没有加框的
   realsense_ball_sub_ =
       this->create_subscription<yolov8_msgs::msg::KeyPoint3DArray>(
           "/rc_decision/keypoint3d", rclcpp::SensorDataQoS(),
@@ -112,16 +112,16 @@ StateCollectorNode::StateCollectorNode(
 }
 
 // 总体机器人控制接口，发布最终的运动信息，以30Hz的频率控制机器人
-// 由于必须结合球部的目标点进行结算，所以这里直接使用Motion msg最为方便
+// 由于必须结合球部的目标点进行结算，所以这里直接使用Motion msg最为方�?
 void StateCollectorNode::robo_state_callback() {
 
   // 注意这里的x,y并没有进行解算，在rc_controller里面进行解算
-  // 然后结构体里面的 measure_yaw 由controller中得到更新，这里面并没有进行赋值
+  // 然后结构体里面的 measure_yaw 由controller中得到更新，这里面并没有进行赋�?
   rc_interface_msgs::msg::Motion msg;
   msg.ball_x = realsense_ball_[0];
   msg.ball_y = realsense_ball_[1];
 
-  // 0到4是 pid controller 决定的
+  // 0�?4�? pid controller 决定�?
   if (robo_mode_ == 0) {
     msg.cmd_vx = desire_pose_msg1_.x;
     msg.cmd_vy = desire_pose_msg1_.y;
@@ -152,7 +152,7 @@ void StateCollectorNode::robo_state_callback() {
   } 
   // 进入找球吸球放球模式
   else if ( robo_mode_ == 4 )  {
-  //第一优先级，有无吸到球，有无吸到球
+  //第一优先级，有无吸到球，有无吸到�?
   // 7.9 test
     
     // 
@@ -162,22 +162,22 @@ void StateCollectorNode::robo_state_callback() {
     msg.cmd_vy = desire_pose_msg5_.y;
     msg.desire_yaw = desire_pose_msg5_.z;
 
-    // //如果没有吸到球
+    // //如果没有吸到�?
     // if (!attach_state_){
-    //   // 如果realsense检测到球
+    //   // 如果realsense检测到�?
     //   if (realsense_ball_[0] != 0) {
-    //     // 保持位置在4位置， 然后转身，继续吸球
+    //     // 保持位置�?4位置�? 然后转身，继续吸�?
     //     msg.cmd_vx = desire_pose_msg4_.x;
     //     msg.cmd_vy = desire_pose_msg4_.y;
     //     msg.desire_yaw = desire_pose_msg4_.z;
         
-    //     // 1代表抓取，臂放下，抓球
+    //     // 1代表抓取，臂放下，抓�?
     //     msg.arm = 1;
 
     //   }
-    //   // 如果realsense没有球了, 等待r1发过来的球
+    //   // 如果realsense没有球了, 等待r1发过来的�?
     //   else {
-    //     // 和desire_pose_msg基本只有朝向不一样
+    //     // 和desire_pose_msg基本只有朝向不一�?
         
     //     msg.cmd_vx = desire_pose_msg6_.x;
     //     msg.cmd_vy = desire_pose_msg6_.y;
@@ -202,6 +202,7 @@ void StateCollectorNode::robo_state_callback() {
     // 没有球的话，直接等球
 
   } else if (robo_mode_ == 5 ) {
+    
   } 
 
     // msg.cmd_vx = desire_pose_msg3_.x;
@@ -211,7 +212,7 @@ void StateCollectorNode::robo_state_callback() {
   motion_pub_->publish(msg);
 
   // 发布目标的运动信息，记得z代表的是yaw轴的角度
-  // 启动的时候如果在1区，那么就是上2区的红色的点的地方
+  // 启动的时候如果在1区，那么就是�?2区的红色的点的地�?
 
   // if (robo_mode_ == 0) {
   //   geometry_msgs::msg::Point desire_pose_msg;
@@ -250,7 +251,7 @@ void StateCollectorNode::getParam() {
   std::vector<double> desire_pose1 =
       this->get_parameter("desire_pose1").as_double_array();
 
-  // desire的角度
+  // desire的角�?
   desire_pose_msg1_.x = desire_pose1[0];
   desire_pose_msg1_.y = desire_pose1[1];
   desire_pose_msg1_.z = desire_pose1[2];
@@ -261,7 +262,7 @@ void StateCollectorNode::getParam() {
 
   desire_pose_msg2_.x = desire_pose2[0];
   desire_pose_msg2_.y = desire_pose2[1];
-  // desire的角度
+  // desire的角�?
   desire_pose_msg2_.z = desire_pose2[2];
 
   this->declare_parameter<std::vector<double>>("desire_pose3", {0.0, 0.0, 0.0});
@@ -270,7 +271,7 @@ void StateCollectorNode::getParam() {
 
   desire_pose_msg3_.x = desire_pose3[0];
   desire_pose_msg3_.y = desire_pose3[1];
-  // desire的角度
+  // desire的角�?
   desire_pose_msg3_.z = desire_pose3[2];
 
   this->declare_parameter<std::vector<double>>("desire_pose4", {0.0, 0.0, 0.0});
@@ -279,7 +280,7 @@ void StateCollectorNode::getParam() {
 
   desire_pose_msg4_.x = desire_pose4[0];
   desire_pose_msg4_.y = desire_pose4[1];
-  // desire的角度
+  // desire的角�?
   desire_pose_msg4_.z = desire_pose4[2];
 
   this->declare_parameter<std::vector<double>>("desire_pose5", {0.0, 0.0, 0.0});
@@ -288,7 +289,7 @@ void StateCollectorNode::getParam() {
 
   desire_pose_msg5_.x = desire_pose5[0];
   desire_pose_msg5_.y = desire_pose5[1];
-  // desire的角度
+  // desire的角�?
   desire_pose_msg5_.z = desire_pose5[2];
 
   this->declare_parameter<std::vector<double>>("desire_pose6", {0.0, 0.0, 0.0});
@@ -297,7 +298,7 @@ void StateCollectorNode::getParam() {
 
   desire_pose_msg6_.x = desire_pose6[0];
   desire_pose_msg6_.y = desire_pose6[1];
-  // desire的角度
+  // desire的角�?
   desire_pose_msg6_.z = desire_pose6[2];
 }
 
@@ -306,18 +307,18 @@ void StateCollectorNode::carried_state_callback(
 
   //
   if (msg->data == true) {
-    // 如果携带到球了
+    // 如果携带到球�?
     robo_mode_ = 2;
   } else {
-    // 如果还在 1 区
+    // 如果还在 1 �?
     if (area_mode_ == 0)
-      // 更新机器人状态为0：通往3区
+      // 更新机器人状态为0：通往3�?
       robo_mode_ = 0;
     // 发送去往3区的运动指令;
     // send_goarea3_goal();
-    // 如果在 3 区
+    // 如果�? 3 �?
     else if (area_mode_ == 1) {
-      // 更新机器人状态为1：找球
+      // 更新机器人状态为1：找�?
       robo_mode_ = 1;
       // send_findball_goal();
     }

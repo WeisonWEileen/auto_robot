@@ -30,10 +30,10 @@ using namespace std::chrono_literals;
 namespace rc_serial_driver
 {
     // float target_point = 0;                              //
-    // 当前目标的像素点的x�?? static int exist_result = 0; //
-    // 是否存在目标（是否存在蓝球或者红球，蓝球对应的id�??3，红球对应的id�??2�??
-    // static size_t num_detections = 0; // 识别到的蓝球的个�??
-    // static float max_radius = 0;  // 记录球的最大半�??
+    // 当前目标的像素点的x�??? static int exist_result = 0; //
+    // 是否存在目标（是否存在蓝球或者红球，蓝球对应的id�???3，红球对应的id�???2�???
+    // static size_t num_detections = 0; // 识别到的蓝球的个�???
+    // static float max_radius = 0;  // 记录球的最大半�???
     RCSerialDriver::RCSerialDriver(const rclcpp::NodeOptions &options)
         : Node("rc_serial_driver", options), owned_ctx_{new IoContext(2)},
           serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
@@ -65,7 +65,7 @@ namespace rc_serial_driver
       serial_driver_->init_port(device_name_, *device_config_);
       if (!serial_driver_->port()->is_open()) {
         serial_driver_->port()->open();
-        // receive_thread_ = std::thread(&RCSerialDriver::receiveData, this);
+        receive_thread_ = std::thread(&RCSerialDriver::receiveData, this);
       }
     } catch (const std::exception &ex) {
       RCLCPP_ERROR(get_logger(), "Error creating serial port: %s - %s",
@@ -73,7 +73,7 @@ namespace rc_serial_driver
       throw ex;
     }
 
-    // // 使用定时器发送，以降低串口的发送频�??
+    // // 使用定时器发送，以降低串口的发送频�???
     // target_sub_ = this->create_subscription<rc_interface_msgs::msg::Motion>(
     //     "/cmd_vel", rclcpp::SensroDataQoS(),
     //     [this](rc_interface_msgs::msg::Motion::SharedPtr msg) {
@@ -138,45 +138,54 @@ namespace rc_serial_driver
   }
 
   void RCSerialDriver::receiveData() {
-    std::vector<uint8_t> header(1);
-    std::vector<uint8_t> data;
-    data.reserve(sizeof(ReceivePacket));
+
+        std::vector<uint8_t> header(3);
+        // std::vector<uint8_t> data;
+        // data.reserve(sizeof(ReceivePacket));
 
     while (rclcpp::ok()) {
       try {
-        serial_driver_->port()->receive(header);
 
-        if (header[0] == 0x5A) {
-          data.resize(sizeof(ReceivePacket) - 1);
-          serial_driver_->port()->receive(data);
+        serial_driver_->port()
+            ->receive(header);
+        // RCLCPP_WARN_STREAM(this->get_logger(), "header size(): " << header.size());
 
-          data.insert(data.begin(), header[0]);
-          ReceivePacket packet = fromVector(data);
+        // 检测帧头帧尾是否都�?43
+        if (header[0] == 43 && header[2] == 43) {
+          
+          // ReceivePacket r_packet = fromVector(header);
+          // std::cout << r_packet.attached << std::endl;
+          // RCLCPP_WARN_STREAM(
+              // this->get_logger(), "hear: " << r_packet.header
+                                          //  << " attached: " << r_packet.attached
+                                          //  << " tail: " << r_packet.tail);
 
-          bool crc_ok = crc16::Verify_CRC16_Check_Sum(
-              reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
-          if (crc_ok) {
-            if (!initial_set_param_ ||
-                packet.detect_color != previous_receive_color_) {
-              setParam(rclcpp::Parameter("detect_color", packet.detect_color));
-              previous_receive_color_ = packet.detect_color;
-            }
+          //不需要设置crc校验
 
-            if (packet.reset_tracker) {
-              resetTracker();
-            }
+          // bool crc_ok = crc16::Verify_CRC16_Check_Sum(
+          //     reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
+          // if (crc_ok) {
+          //   if (!initial_set_param_ ||
+          //       packet.detect_color != previous_receive_color_) {
+          //     setParam(rclcpp::Parameter("detect_color", packet.detect_color));
+          //     previous_receive_color_ = packet.detect_color;
+          //   }
 
-            geometry_msgs::msg::TransformStamped t;
-            timestamp_offset_ =
-                this->get_parameter("timestamp_offset").as_double();
-            t.header.stamp =
-                this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-            t.header.frame_id = "odom";
-            t.child_frame_id = "gimbal_link";
-            tf2::Quaternion q;
-            q.setRPY(packet.roll, packet.pitch, packet.yaw);
-            t.transform.rotation = tf2::toMsg(q);
-            tf_broadcaster_->sendTransform(t);
+          //   if (packet.reset_tracker) {
+          //     resetTracker();
+          //   }
+
+            // geometry_msgs::msg::TransformStamped t;
+            // timestamp_offset_ =
+            //     this->get_parameter("timestamp_offset").as_double();
+            // t.header.stamp =
+            //     this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
+            // t.header.frame_id = "odom";
+            // t.child_frame_id = "gimbal_link";
+            // tf2::Quaternion q;
+            // q.setRPY(packet.roll, packet.pitch, packet.yaw);
+            // t.transform.rotation = tf2::toMsg(q);
+            // tf_broadcaster_->sendTransform(t);
 
             // if (abs(packet.aim_x) > 0.01)
             // {
@@ -186,13 +195,13 @@ namespace rc_serial_driver
             //     aiming_point_.pose.position.z = packet.aim_z;
             //     marker_pub_->publish(aiming_point_);
             // }
-          } else {
-            RCLCPP_ERROR(get_logger(), "CRC error!");
+          // } else {
+            // RCLCPP_ERROR(get_logger(), "CRC error!");
           }
-        } else {
-          RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 20,
-                               "Invalid header: %02X", header[0]);
-        }
+        // } else {
+        //   RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 20,
+        //                        "Invalid header: %02X", header[0]);
+        // }
       } catch (const std::exception &ex) {
         RCLCPP_ERROR_THROTTLE(get_logger(), *get_clock(), 20,
                               "Error while receiving data: %s", ex.what());

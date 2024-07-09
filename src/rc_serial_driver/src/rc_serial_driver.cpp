@@ -30,10 +30,10 @@ using namespace std::chrono_literals;
 namespace rc_serial_driver
 {
     // float target_point = 0;                              //
-    // 当前目标的像素点的x值 static int exist_result = 0; //
-    // 是否存在目标（是否存在蓝球或者红球，蓝球对应的id是3，红球对应的id是2）
-    // static size_t num_detections = 0; // 识别到的蓝球的个数
-    // static float max_radius = 0;  // 记录球的最大半径
+    // 当前目标的像素点的x�?? static int exist_result = 0; //
+    // 是否存在目标（是否存在蓝球或者红球，蓝球对应的id�??3，红球对应的id�??2�??
+    // static size_t num_detections = 0; // 识别到的蓝球的个�??
+    // static float max_radius = 0;  // 记录球的最大半�??
     RCSerialDriver::RCSerialDriver(const rclcpp::NodeOptions &options)
         : Node("rc_serial_driver", options), owned_ctx_{new IoContext(2)},
           serial_driver_{new drivers::serial_driver::SerialDriver(*owned_ctx_)}
@@ -73,7 +73,7 @@ namespace rc_serial_driver
       throw ex;
     }
 
-    // // 使用定时器发送，以降低串口的发送频率
+    // // 使用定时器发送，以降低串口的发送频�??
     // target_sub_ = this->create_subscription<rc_interface_msgs::msg::Motion>(
     //     "/cmd_vel", rclcpp::SensroDataQoS(),
     //     [this](rc_interface_msgs::msg::Motion::SharedPtr msg) {
@@ -212,18 +212,20 @@ namespace rc_serial_driver
       packet.cmd_vy = msg->cmd_vy;
       packet.desire_yaw = msg->desire_yaw;
       packet.measure_yaw = msg->measure_yaw;
+      packet.if_angle_flag = 1;
 
       // packet.cmd_vx = 0;
       // packet.cmd_vy = 0;
       // packet.desire_yaw = 0;
       // packet.measure_yaw = 0;
-      // packet.x_dot = msg-> ball_x;
-      // packet.y_dot = msg-> ball_y;
+      packet.x_dot = msg->ball_x;
+      packet.y_dot = msg->ball_y;
+      packet.roboarm_state = msg->arm;
 
-      RCLCPP_INFO_STREAM(this->get_logger(), "serial x y yaw "
-                                                 << packet.cmd_vx << " "
-                                                 << packet.cmd_vy << " "
-                                                 << packet.desire_yaw);
+      RCLCPP_INFO_STREAM(this->get_logger(),
+                         "serial x " << packet.cmd_vx << " y " << packet.cmd_vy
+                                    << " xdot " << packet.x_dot << " y_dot "<< packet.y_dot << " desire yaw"
+                                     << packet.desire_yaw);
 
       // RCLCPP_WARN_STREAM(this->get_logger(),"the output is"<<packet.cmd_vx<<"
       // " <<packet.cmd_vy<<" "<< packet.desire_yaw);

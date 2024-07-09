@@ -8,7 +8,7 @@ namespace rc_state_collector {
 
 StateCollectorNode::StateCollectorNode(
     const rclcpp::NodeOptions &options = rclcpp::NodeOptions())
-    : Node("state_collector", options), robo_mode_(0), area_mode_(0),
+    : Node("state_collector", options), robo_mode_(5), area_mode_(0),
       realsense_ball_({0.0f, 0.0f}), v4l2_ball_({0.0f, 0.0f}),
       attach_state_(0) {
 
@@ -57,9 +57,15 @@ StateCollectorNode::StateCollectorNode(
           "/rc_decision/keypoint3d", rclcpp::SensorDataQoS(),
           [this](yolov8_msgs::msg::KeyPoint3DArray::SharedPtr msg) {
             if (!msg->data.empty()) {
-              auto first_ball = msg->data[0];
-              realsense_ball_[0] = first_ball.point.x;
-              realsense_ball_[1] = first_ball.point.y;
+
+              auto min_element = std::min_element(
+                  msg->data.begin(), msg->data.end(),
+                  [](const auto &a, const auto &b) {
+                    return a.point.x * a.point.x + a.point.y * a.point.y <
+                           b.point.x * b.point.x + b.point.y * b.point.y;
+                  });
+              realsense_ball_[0] = min_element->point.x;
+              realsense_ball_[1] = min_element->point.y;
               RCLCPP_INFO_STREAM(this->get_logger(),
                                  "receiver: " << realsense_ball_[0] << " "
                                               << realsense_ball_[1]);
@@ -98,7 +104,7 @@ StateCollectorNode::StateCollectorNode(
 
   // 定时回调发布机器人的运动命令
   timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(90),
+      std::chrono::milliseconds(10),
       std::bind(&StateCollectorNode::robo_state_callback, this));
 
   motion_pub_ = this->create_publisher<rc_interface_msgs::msg::Motion>(
@@ -120,35 +126,82 @@ void StateCollectorNode::robo_state_callback() {
     msg.cmd_vx = desire_pose_msg1_.x;
     msg.cmd_vy = desire_pose_msg1_.y;
     msg.desire_yaw = desire_pose_msg1_.z;
+    // 0代表不抓取，臂举着
+    msg.arm = 0;
   }
 
-  else if (robo_mode_ == 1) {
+  else if   ( robo_mode_ == 1 ) {
     msg.cmd_vx = desire_pose_msg2_.x;
     msg.cmd_vy = desire_pose_msg2_.y;
     msg.desire_yaw = desire_pose_msg2_.z;
-  } else if (robo_mode_ == 2) {
+    // 0代表不抓取，臂举着
+    msg.arm = 0;
+  } else if ( robo_mode_ == 2 ) {
     msg.cmd_vx = desire_pose_msg3_.x;
     msg.cmd_vy = desire_pose_msg3_.y;
     msg.desire_yaw = desire_pose_msg3_.z;
-  } else if (robo_mode_ == 3) {
+    // 0代表不抓取，臂举着
+    msg.arm = 0;
+  } else if ( robo_mode_ == 3 ) {
 
     msg.cmd_vx = desire_pose_msg4_.x;
     msg.cmd_vy = desire_pose_msg4_.y;
     msg.desire_yaw = desire_pose_msg4_.z;
-  } else if (robo_mode_ == 4) {
-    // 代表有球，底盘不动
-    // if()
-    // if (msg.ball_x != 0) {
-      // 臂找球
-      // msg.robo_state
+    // 0代表不抓取，臂举着
+    msg.arm = 0;
+  } 
+  // 进入找球吸球放球模式
+  else if ( robo_mode_ == 4 )  {
+  //第一优先级，有无吸到球，有无吸到球
+  // 7.9 test
+    
+    // 
+    msg.ball_x = realsense_ball_[0];
+    msg.ball_y = realsense_ball_[1];
     msg.cmd_vx = desire_pose_msg5_.x;
     msg.cmd_vy = desire_pose_msg5_.y;
     msg.desire_yaw = desire_pose_msg5_.z;
-  } else if (robo_mode_ == 5) {
 
-    msg.cmd_vx = desire_pose_msg6_.x;
-    msg.cmd_vy = desire_pose_msg6_.y;
-    msg.desire_yaw = desire_pose_msg6_.z;
+    // //如果没有吸到球
+    // if (!attach_state_){
+    //   // 如果realsense检测到球
+    //   if (realsense_ball_[0] != 0) {
+    //     // 保持位置在4位置， 然后转身，继续吸球
+    //     msg.cmd_vx = desire_pose_msg4_.x;
+    //     msg.cmd_vy = desire_pose_msg4_.y;
+    //     msg.desire_yaw = desire_pose_msg4_.z;
+        
+    //     // 1代表抓取，臂放下，抓球
+    //     msg.arm = 1;
+
+    //   }
+    //   // 如果realsense没有球了, 等待r1发过来的球
+    //   else {
+    //     // 和desire_pose_msg基本只有朝向不一样
+        
+    //     msg.cmd_vx = desire_pose_msg6_.x;
+    //     msg.cmd_vy = desire_pose_msg6_.y;
+    //     msg.desire_yaw = desire_pose_msg6_.z;
+
+    //     // 臂抬起来
+    //     msg.arm = 0;
+    //     msg.ball_x = realsense_ball_[0];
+    //     msg.ball_y = realsense_ball_[1];
+
+    //     // msg.cmd_vx
+    //   }
+    // }
+    // // 如果 attach 状态为1 ，吸到了球，到球筐的地方
+    // else{
+    //   msg.cmd_vx = desire_pose_msg5_.x;
+    //   msg.cmd_vy = desire_pose_msg5_.y;
+    //   msg.desire_yaw = desire_pose_msg5_.z;
+    //   msg.arm = 0 ;
+      
+    // }
+    // 没有球的话，直接等球
+
+  } else if (robo_mode_ == 5 ) {
   } 
 
     // msg.cmd_vx = desire_pose_msg3_.x;
@@ -193,14 +246,14 @@ void StateCollectorNode::robo_state_callback() {
 
 void StateCollectorNode::getParam() {
   // 用于测试
-  this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
-  std::vector<double> desire_pose =
-      this->get_parameter("desire_pose").as_double_array();
+  this->declare_parameter<std::vector<double>>("desire_pose1", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose1 =
+      this->get_parameter("desire_pose1").as_double_array();
 
   // desire的角度
-  desire_pose_msg1_.x = desire_pose[0];
-  desire_pose_msg1_.y = desire_pose[1];
-  desire_pose_msg1_.z = desire_pose[2];
+  desire_pose_msg1_.x = desire_pose1[0];
+  desire_pose_msg1_.y = desire_pose1[1];
+  desire_pose_msg1_.z = desire_pose1[2];
 
   this->declare_parameter<std::vector<double>>("desire_pose2", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose2 =
@@ -231,12 +284,21 @@ void StateCollectorNode::getParam() {
 
   this->declare_parameter<std::vector<double>>("desire_pose5", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose5 =
-      this->get_parameter("desire_pose4").as_double_array();
+      this->get_parameter("desire_pose5").as_double_array();
 
   desire_pose_msg5_.x = desire_pose5[0];
   desire_pose_msg5_.y = desire_pose5[1];
   // desire的角度
   desire_pose_msg5_.z = desire_pose5[2];
+
+  this->declare_parameter<std::vector<double>>("desire_pose6", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose6 =
+      this->get_parameter("desire_pose6").as_double_array();
+
+  desire_pose_msg6_.x = desire_pose6[0];
+  desire_pose_msg6_.y = desire_pose6[1];
+  // desire的角度
+  desire_pose_msg6_.z = desire_pose6[2];
 }
 
 void StateCollectorNode::carried_state_callback(

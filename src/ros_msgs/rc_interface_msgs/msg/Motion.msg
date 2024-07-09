@@ -10,4 +10,10 @@ float32 desire_yaw
 float32 measure_yaw
 float32 ball_x
 float32 ball_y
-bool attached
+# 机械臂状态对应，
+# 0对应抬起
+# 1对应找
+# 3对应放球
+int32 arm
+# 0对应速度模式，1对应位置模式
+int32 mode

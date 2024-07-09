@@ -7,7 +7,7 @@
 #define Area_23_XThres 9.0
 
 // 终端日志
-// 红色：对应的是雷达位置更新信息
+// 红色：对应的是雷达位置更新信�??
 // 黄色：对应的是PID控制器的输出
 // 灰色：对应的是rc_state_collector给的命令
 
@@ -17,24 +17,23 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
     : Node("pose_controller", options), offet_(0.0f) {
   RCLCPP_INFO(this->get_logger(), "Starting PoseController node!");
 
-  // 获取位置在一区还是二区
+  // 获取位置在一区还是二�??
   auto pos_request = this->create_client<rc_interface_msgs::srv::InitPos>(
       "/rc_decision/init_pose");
 
   get_desireLoc();
   init_PID();
 
-  // 初始化位置
+  // 初始化位�??
   current_pose_.x = 0;
   current_pose_.y = 0;
   current_pose_.yaw = 0;
 
   this->declare_parameter<std::string>("init_pose_topic", "/image_raw");
-  std::string init_pose_topic =
-      this->get_parameter("init_pose_topic").as_string();
+  std::string init_pose_topic = this->get_parameter("init_pose_topic").as_string();
 
   // 向摄像头识别节点请求
-  // 这里只是用来锻炼能力的 -------------------- -
+  // 这里只是用来锻炼能力�?? -------------------- -
   init_pos_client_ = this->create_client<rc_interface_msgs::srv::InitPos>(
       "/rc_decision/init_pose");
   auto request = std::make_shared<rc_interface_msgs::srv::InitPos::Request>();
@@ -47,15 +46,15 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
   auto status = future_result.wait_for(std::chrono::seconds(1));
   if (status == std::future_status::ready) {
     auto result = future_result.get();
-    // 在这里处理结果
+    // 在这里处理结�??
     uint8_t posmode = result->posmode;
     RCLCPP_INFO_STREAM(this->get_logger(), "Request init_pose" << posmode);
     // ...
   } else {
-    // 请求超时或者其他错误
+    // 请求超时或者其他错�??
     // ...
   }
-  // 这里只是用来锻炼能力的 --------------------
+  // 这里只是用来锻炼能力�?? --------------------
 
   // Fastlio
   //实时订阅Mid360发出来的当前位姿信息
@@ -64,7 +63,7 @@ PoseControllerNode::PoseControllerNode(const rclcpp::NodeOptions &options)
       std::bind(&PoseControllerNode::poseUpdate_callback, this,
                 std::placeholders::_1));
 
-  //发布位置的信息
+  //发布位置的信�??
   position_mode_.data = 0;
   position_mode_pub_ =
       this->create_publisher<std_msgs::msg::Int32>("/rc/position_mode", 10);
@@ -105,13 +104,13 @@ void PoseControllerNode::init_PID() {
 //
 void PoseControllerNode::get_desireLoc() {
 
-  // 距离到达的阈值
+  // 距离到达的阈�??
 
   // desire Pose 1
 
-  this->declare_parameter<std::vector<double>>("desire_pose", {0.0, 0.0, 0.0});
+  this->declare_parameter<std::vector<double>>("desire_pose1", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose1 =
-      this->get_parameter("desire_pose").as_double_array();
+      this->get_parameter("desire_pose1").as_double_array();
   desire_pose1_.x = desire_pose1[0];
   desire_pose1_.y = desire_pose1[1];
   desire_pose1_.yaw = desire_pose1[2];
@@ -132,13 +131,27 @@ void PoseControllerNode::get_desireLoc() {
   desire_pose3_.y = desire_pose3[1];
   desire_pose3_.yaw = desire_pose3[2];
 
-  // desire Pose 4 取球点1
+  // desire Pose 4 取球�??1
   this->declare_parameter<std::vector<double>>("desire_pose4", {0.0, 0.0, 0.0});
   std::vector<double> desire_pose4 =
       this->get_parameter("desire_pose4").as_double_array();
-  desire_pose4_.x = desire_pose3[0];
-  desire_pose4_.y = desire_pose3[1];
-  desire_pose4_.yaw = desire_pose3[2];
+  desire_pose4_.x = desire_pose4[0];
+  desire_pose4_.y = desire_pose4[1];
+  desire_pose4_.yaw = desire_pose4[2];
+
+    this->declare_parameter<std::vector<double>>("desire_pose5", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose5 =
+      this->get_parameter("desire_pose5").as_double_array();
+  desire_pose5_.x = desire_pose5[0];
+  desire_pose5_.y = desire_pose5[1];
+  desire_pose5_.yaw = desire_pose5[2];
+
+      this->declare_parameter<std::vector<double>>("desire_pose6", {0.0, 0.0, 0.0});
+  std::vector<double> desire_pose6 =
+      this->get_parameter("desire_pose6").as_double_array();
+  desire_pose6_.x = desire_pose6[0];
+  desire_pose6_.y = desire_pose6[1];
+  desire_pose6_.yaw = desire_pose6[2];
 
   // position_mode change thres
   this->declare_parameter<float>("dis_thres", 0.2);
@@ -147,7 +160,7 @@ void PoseControllerNode::get_desireLoc() {
   //;
 }
 
-// 订阅mid360的驱动接口
+// 订阅mid360的驱动接�??
 void PoseControllerNode::poseUpdate_callback(
     const nav_msgs::msg::Odometry::ConstSharedPtr msg) {
 
@@ -167,8 +180,8 @@ void PoseControllerNode::poseUpdate_callback(
   RCLCPP_INFO(this->get_logger(), "lidar x: %f, y: %f, yaw: %f", current_x,
               current_y, yaw);
 
-  // 机器人区域状态切换
-  // 如果机器人在状态1，那么就是1-2，运动到2去
+  // 机器人区域状态切�??
+  // 如果机器人在状�?1，那么就�??1-2，运动到2�??
 
   if (position_mode_.data == 0) {
     double current_thres =
@@ -176,10 +189,10 @@ void PoseControllerNode::poseUpdate_callback(
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "current thres is " << current_thres);
     if (current_thres > euclidisThres_) {
-      // 还在跑第一段线段,继续跑
-      return;
+      // 还在跑第一段线�??,继续�??
+      // return;
     }
-    //小于阈值，位置模式设置成2
+    //小于阈值，位置模式设置�??2
     else {
       // std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -187,15 +200,15 @@ void PoseControllerNode::poseUpdate_callback(
     }
   }
 
-  // 如果机器人在状态2，那么就是2-2，运动到2下面
+  // 如果机器人在状�?2，那么就�??2-2，运动到2下面
   else if (position_mode_.data == 1) {
     double current_thres =
         euclidis(current_x, current_y, 0, desire_pose2_.x, desire_pose2_.y, 0);
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "current thres is " << current_thres);
     if (current_thres > euclidisThres_) {
-      // 还在跑第一段线段,继续跑
-      return;
+      // 还在跑第一段线�??,继续�??
+      // return;
     } else {
       // 延时一秒，防止超调
       position_mode_.data = 2;
@@ -206,8 +219,7 @@ void PoseControllerNode::poseUpdate_callback(
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "current thres is " << current_thres);
     if (current_thres > euclidisThres_) {
-      // 还在跑第二段线段,继续跑
-      return;
+      // 还在跑第二段线段,继续�??
     } else {
 
       position_mode_.data = 3;
@@ -218,49 +230,38 @@ void PoseControllerNode::poseUpdate_callback(
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "current thres is " << current_thres);
     if (current_thres > euclidisThres_) {
-      // 还在跑第三段线段,继续跑
-      return;
+      // 还在跑第三段线段,继续�??
     } else {
-
+      // 到达了第四个点了
       position_mode_.data = 4;
     }
   } else if (position_mode_.data == 4) {
-    double current_thres =
-        euclidis(current_x, current_y, 0, desire_pose3_.x, desire_pose3_.y, 0);
-    RCLCPP_ERROR_STREAM(this->get_logger(),
-                        "current thres is " << current_thres);
-    if (current_thres > euclidisThres_) {
-      return;
-      // 还在跑第四段线段,继续跑
-    } else {
-      position_mode_.data = 3;
-    }
-  } else if (position_mode_.data == 5) {
-    double current_thres =
+    
+        double current_thres =
         euclidis(current_x, current_y, 0, desire_pose5_.x, desire_pose5_.y, 0);
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "current thres is " << current_thres);
     if (current_thres > euclidisThres_) {
-      return;
-      // 还在跑第四段线段,继续跑
+      // 还在跑第四段线段,继续�??
+
     } else {
       position_mode_.data = 3;
-    }}
-    // else{
+    }
 
-    // position_mode_.data = 2;
+
+    
+  } else if (position_mode_.data == 5) {
+    // double current_thres =
+    //     euclidis(current_x, current_y, 0, desire_pose5_.x, desire_pose5_.y, 0);
+    // RCLCPP_ERROR_STREAM(this->get_logger(),
+    //                     "current thres is " << current_thres);
+    // if (current_thres > euclidisThres_) {
+    //   // 还在跑第四段线段,继续�??
+
+    // } else {
+    //   position_mode_.data = 4;
     // }
-
-    // else if (position_mode_.data == 2)
-    // {
-    //   if (euclidis(current_x, current_y, yaw, desire_pose3_.x,
-    //   desire_pose3_.y,desire_pose3_.yaw) < euclidisThres_){
-    //     // 还在跑第一段线段,继续跑
-    //     position_mode_.data = 3;
-    //   } else {
-    //     // 已经跑到了范围内部
-    //     }
-    //   }
+  }
 
     current_pose_.x = current_x;
     current_pose_.y = current_y;
@@ -268,6 +269,7 @@ void PoseControllerNode::poseUpdate_callback(
     RCLCPP_ERROR_STREAM(this->get_logger(),
                         "Publisher mode " << position_mode_.data);
     position_mode_pub_->publish(position_mode_);
+    
   }
 
 inline double PoseControllerNode::euclidis(double x1, double x2, double x3,
@@ -303,7 +305,7 @@ void PoseControllerNode::poseCommand_callback(
 
 
   // static float thisx,lastx,llastx,n,maxn;
-  // 两帧雷达数据之间的进行线性插值插值
+  // 两帧雷达数据之间的进行线性插值插�??
  
   // if ((current_pose_.x - x_pose_) < inte_thres_) {
     // n_ = 0;
@@ -318,6 +320,7 @@ void PoseControllerNode::poseCommand_callback(
     // n_ = 0;
     // y_last_pose_ = current_pose_.y;
   // }
+
   // y_pose_ = y_last_pose_ + (current_pose_.y - y_last_pose_) * n_ / maxn_;
 
   // n_ = n_ + 1;
@@ -333,26 +336,28 @@ void PoseControllerNode::poseCommand_callback(
   // 臂的调试
   // motion_msg.cmd_vy = 0;
 
-  // desire_yaw，目标值
+  // desire_yaw，目标�?
   motion_msg.desire_yaw = msg->desire_yaw;
 
   // 臂的调试
   // motion_msg.desire_yaw = 0;
 
-  RCLCPP_WARN_STREAM(this->get_logger(), "fuck you" << motion_msg.desire_yaw);
 
   // measure_yaw,测量到的角度
   motion_msg.measure_yaw = current_pose_.yaw;
+  RCLCPP_WARN_STREAM(this->get_logger(), "fuck you" << motion_msg.measure_yaw);
 
   motion_msg.ball_x = msg->ball_x;
   motion_msg.ball_y = msg->ball_y;
+  motion_msg.mode = 1;
 
-  // @TODO 后续可以取消
+      // @TODO 后续可以取消
   RCLCPP_WARN_STREAM(this->get_logger(),
                      "Output_of_v x: "
                          << motion_msg.cmd_vx << ", y: " << motion_msg.cmd_vy
                          << ", desire_yaw: " << motion_msg.desire_yaw
-                         << ", measure_yaw: " << motion_msg.measure_yaw);
+                         << ", measure_yaw: " << motion_msg.measure_yaw
+                         << " ballx: " << msg->ball_x);
 
   cmd_pub_->publish(motion_msg);
 }
@@ -395,7 +400,7 @@ double PIDController::pidCalculate(double current, double desire_value) {
   return output_;
 }
 
-// 用于转换到世界坐标系下应有的x和y的pid控制器输入值
+// 用于转换到世界坐标系下应有的x和y的pid控制器输入�?
 // 由于yaw放在下位机闭环相应很快，并且没有超调，所以可以近似认为desire_yaw就是current_yaw
 
 Pose PoseControllerNode::target_xy_transform(double desire_world_x,

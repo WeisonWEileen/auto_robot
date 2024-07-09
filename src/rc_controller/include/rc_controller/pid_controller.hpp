@@ -22,9 +22,9 @@
 #include <std_msgs/msg/string.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-#include <vector>
+#include <vector> 
 
-// 三个目标点的对应的阈值
+// 三个目标点的对应的阈�?
 #define Area_12_XThres 6.0
 #define Area_22_YThres -3.5
 #define Area_23_YThres 9.0
@@ -69,9 +69,9 @@ private:
   double output_ = 0.0;
 };
 
-//@TODO 目前的计算是desire value 和 current value
+//@TODO 目前的计算是desire value �? current value
 //分开两部分传输，不知道会不会有问题，后续可以考虑使用 message filter
-//进行软同步
+//进行软同�?
 
 class PoseControllerNode : public rclcpp::Node {
 public:
@@ -82,27 +82,28 @@ private:
   std::unique_ptr<PIDController> y_controller_;
   std::unique_ptr<PIDController> yaw_controller_;
 
-  // 储存位置信息并且做发布
+  // 储存位置信息并且做发�?
   std_msgs::msg::Int32 position_mode_;
-  //位置默认的发布
+  //位置默认的发�?
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr position_mode_pub_;
 
-  //初始化PID嵌套类
+  //初始化PID嵌套�?
   void init_PID();
-  // 获取连续运动的阈值
+  // 获取连续运动的阈�?
   void get_desireLoc();
-  // 储存的三个目标地点的目标值
+  // 储存的三个目标地点的目标�?
   Pose desire_pose1_;
   Pose desire_pose2_;
   Pose desire_pose3_;
   Pose desire_pose4_;
   Pose desire_pose5_;
+  Pose desire_pose6_;
 
   float euclidisThres_;
 
   // 发布运动控制指令
   rclcpp::Publisher<rc_interface_msgs::msg::Motion>::SharedPtr cmd_pub_;
-  // 转换目标位置到机器人坐标系
+  // 转换目标位置到机器人坐标�?
   Pose target_xy_transform(double desire_world_x, double desire_world_y,
                            double desire_yaw);
 
@@ -110,11 +111,11 @@ private:
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr poseUpdate_sub_;
   void poseUpdate_callback(const nav_msgs::msg::Odometry::ConstSharedPtr msg);
 
-  // 用欧氏距离判断是否达到了目标值
+  // 用欧氏距离判断是否达到了目标�?
   inline double euclidis(double x1, double x2, double x3, double y1, double y2,
                          double y3);
 
-  // 订阅决策目标位置,z直接对应yaw轴
+  // 订阅决策目标位置,z直接对应yaw�?
   rclcpp::Subscription<rc_interface_msgs::msg::Motion>::SharedPtr poseCommand_sub_;
   void
   poseCommand_callback(const rc_interface_msgs::msg::Motion::ConstSharedPtr msg);

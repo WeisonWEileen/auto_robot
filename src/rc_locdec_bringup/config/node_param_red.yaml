@@ -8,7 +8,7 @@
     stop_bits: "1"
 
 #----------------ATTENTION------------------#
-# PID controller 参数顺序为 pk,pi,pd,maxI,maxOut
+# PID controller 参数顺序�? pk,pi,pd,maxI,maxOut
 # desire_pose
 
 /locdec_container:
@@ -29,17 +29,35 @@
     # desire_pose3: [5.0, -2.0, 0.0]
     
 
-    # 45度启动 红区上三区参数
+    # 45度启�? 红区上三区参�?
     # desire_pose:  [4.15, 4.15, -45.0]
     # desire_pose2: [6.55,2.016,-45.0]
     # desire_pose3: [8.208,2.945,-45.0]
 
-    #45度启动 蓝区上三区参数
-    desire_pose:  [4.20, 4.20, -45.0]
-    desire_pose2: [6.944,1.47, -45.0]
-    desire_pose3: [9.44,3.916,-45.0]
-    desire_pose4: [7.94,6.434,-135.0]
-    desire_pose4: [9.86,2.44,-45.0]
+    #45度启�? 蓝区上三区参�?
+    desire_pose1: [4.20, 4.20, 0.0]
+    desire_pose2: [6.88, 1.52, 0.0]
+    desire_pose3: [9.26, 4.12, 0.0]
+    desire_pose4: [7.82, 6.58, 135.0]
+    desire_pose5: [10.25,3.18, 0.0]
+    desire_pose6: [6.20, 4.05, 0.0]
+    # desire_pose4: [9.86,2.44,-45.0]
+
+    # 上面的yaw都改�?0.0
+    desire_pose1: [4.20, 4.20, 0.0]
+    desire_pose2: [6.88, 1.52, 0.0]
+    desire_pose3: [9.26, 4.12, 0.0]
+    desire_pose4: [7.82, 6.58, 135.0]
+    desire_pose5: [10.25,3.18, 0.0]
+    desire_pose6: [6.20, 4.05, 0.0]
+
+    # 体育馆白点，测试
+    # desire_pose1: [2.12, 2.12, 0.0]
+    # desire_pose2: [1.06, 3.18, 0.0]
+    # desire_pose3: [1.06, 3.18, 0.0]
+    # desire_pose4: [1.06, 3.18, 0.0]
+    # desire_pose5: [1.06, 3.18, 0.0]
+    # desire_pose6: [1.06, 3.18, 0.0]
     
 
     # [4.36.4.06]
@@ -49,7 +67,7 @@
     # [9.28,1.9353,45.0]
     # [9.8571,2.441396,45]
 
-    # #这个参数是好的 
+    # #这个参数是好�? 
     # desire_pose2: [5.3, 3.3, -45.0]
     # desire_pose3: [5.3, 3.3, -45.0]
 
@@ -67,17 +85,40 @@
     # desire_pose2: [5.0, -2.0, 0.0]
     # desire_pose3: [5.0, -2.0, 0.0]
 
-    # 45度启动 红区上三区参数
+    # 45度启�? 红区上三区参�?
     # desire_pose:  [4.15, 4.15, -45.0]
     # desire_pose2: [6.55,2.016,-45.0]
     # desire_pose3: [8.208,2.945,-45.0]
 
-    #45度启动 蓝区上三区参数
-    desire_pose:  [4.20, 4.20, -45.0]
-    desire_pose2: [6.944,1.47, -45.0]
-    desire_pose3: [9.44,3.916,-45.0]
-    desire_pose4: [7.94,6.434,-135.0]
-    desire_pose4: [9.86,2.44,-45.0]
+    #45度启�? 蓝区上三区参�?
+    desire_pose1: [4.20, 4.20, -45.0]
+    desire_pose2: [6.88, 1.52, -45.0]
+    desire_pose3: [9.25, 4.12,-45.0 ]
+    desire_pose4: [7.82, 6.58,-135.0]
+    desire_pose5: [10.25,3.18,-45.0]
+    desire_pose6: [6.20, 4.05, -45.0]
+
+    # 2024 7 9 晚测试红区shu
+
+
+    #45度启�? 蓝区上三区参数，改了0°
+    desire_pose1: [4.20, 4.20, 0.0]
+    desire_pose2: [6.88, 1.52, 0.0]
+    desire_pose3: [9.25, 4.12, 0.0 ]
+    desire_pose4: [7.82, 6.58,-135.0]
+    desire_pose5: [10.25,3.18, 0.0]
+    desire_pose6: [6.20, 4.05, 0.0]
+
+    #体育馆白点，测试
+    # desire_pose1: [2.12, 2.12, 0.0]
+    # desire_pose2: [1.06, 3.18, 0.0]
+    # desire_pose3: [1.06, 3.18, 0.0]
+    # desire_pose4: [1.06, 3.18, 0.0]
+    # desire_pose5: [1.06, 3.18, 0.0]
+    # desire_pose6: [1.06, 3.18, 0.0]
+
+    
+    #desire_pose4: [9.86,2.44,-45.0]
 
     dis_thres: 0.10
 

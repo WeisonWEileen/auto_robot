@@ -25,12 +25,15 @@ namespace rc_serial_driver
       uint8_t header = 43;
       float cmd_vx = 0.0f;
       float cmd_vy = 0.0f;
-      float desire_yaw;
+      float desire_yaw ;
       float measure_yaw;
+      //0对应的是速度，1对应的是有角度度的情况
+      uint8_t if_angle_flag = 1;
       float x_dot = 0.0f;
       float y_dot = 0.0f;
-      uint8_t robo_state;
-      uint8_t d;
+      //0是高，默认状态，找球，1是找球，2是放球，2之后立即切0   
+      uint8_t roboarm_state = 0;
+      uint8_t d = 0;
       uint8_t tail = 43;
       // uint16_t checksum
 

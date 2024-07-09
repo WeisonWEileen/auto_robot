@@ -5,8 +5,8 @@
             "label": "build detector package",
             "detail": "Build ROS 2 workspace",
             "type": "shell",
-            "command":"colcon build --symlink-install",
-            // "command": "colcon build --symlink-install --packages-select rc_interface_msgs rc_state_collector rc_controller rc_locdec_bringup rc_serial_driver  --parallel-workers 14",
+            // "command":"colcon build --symlink-install",
+            "command": "colcon build --symlink-install --packages-select rc_interface_msgs rc_state_collector rc_controller rc_locdec_bringup rc_serial_driver  --parallel-workers 14",
             "group": {
                 "kind": "build",
                 "isDefault": true

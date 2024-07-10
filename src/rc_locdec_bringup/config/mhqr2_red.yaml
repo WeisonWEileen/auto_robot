@@ -1,0 +1,5 @@
+/mhq_r2_node:
+  ros__parameters:
+  # // time(ms) go3_cmd_vx  time(ms) go3_cmd_vy time go3_cmd_vx 
+    # go3_params_: [6000.0, 300.0, 5000.0, -300.0,3000.0,300.0]
+    go3_params_: [7700.0, 250.0, 4500.0, -250.0,3000.0,0.0]

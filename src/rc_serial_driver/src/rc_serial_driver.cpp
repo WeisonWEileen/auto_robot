@@ -118,7 +118,7 @@ namespace rc_serial_driver
 
     // Create Subscription DetectionArray
     target_sub_ =
-        this->create_subscription<rc_interface_msgs::msg::Motion>(
+        this->create_subscription<rc_interface_msgs::msg::Mhq>(
             "/cmd_vel", rclcpp::SensorDataQoS(),
             std::bind(&RCSerialDriver::sendData, this, std::placeholders::_1));
   }
@@ -212,29 +212,40 @@ namespace rc_serial_driver
 
   // accept ball-tracking data, and give four motors velocity
   void RCSerialDriver::sendData(
-      const rc_interface_msgs::msg::Motion::SharedPtr msg) {
+      const rc_interface_msgs::msg::Mhq::SharedPtr msg) {
 
     try {
       SendPacket packet;
-
       packet.cmd_vx = msg->cmd_vx;
       packet.cmd_vy = msg->cmd_vy;
-      packet.desire_yaw = msg->desire_yaw;
-      packet.measure_yaw = msg->measure_yaw;
-      packet.if_angle_flag = 1;
-
-      // packet.cmd_vx = 0;
-      // packet.cmd_vy = 0;
-      // packet.desire_yaw = 0;
-      // packet.measure_yaw = 0;
-      packet.x_dot = msg->ball_x;
-      packet.y_dot = msg->ball_y;
-      packet.roboarm_state = msg->arm;
+      // packet.cmd_vy = msg->cmd_vy;
+      packet.desire_yaw = 0.0f;
+      packet.mode = 2;
 
       RCLCPP_INFO_STREAM(this->get_logger(),
-                         "serial x " << packet.cmd_vx << " y " << packet.cmd_vy
-                                    << " xdot " << packet.x_dot << " y_dot "<< packet.y_dot << " desire yaw"
-                                     << packet.desire_yaw);
+                         "the packet is "
+                             << packet.cmd_vx << " " << packet.cmd_vy << " "
+                             << packet.desire_yaw << " " << packet.mode);
+
+      // packet.cmd_vx = msg->cmd_vx;
+      // packet.cmd_vy = msg->cmd_vy;
+      // packet.desire_yaw = msg->desire_yaw;
+      // packet.measure_yaw = msg->measure_yaw;
+      // packet.if_angle_flag = 1;
+
+      // // packet.cmd_vx = 0;
+      // // packet.cmd_vy = 0;
+      // // packet.desire_yaw = 0;
+      // // packet.measure_yaw = 0;
+      // packet.x_dot = msg->ball_x;
+      // packet.y_dot = msg->ball_y;
+      // packet.roboarm_state = msg->arm;
+
+      // RCLCPP_INFO_STREAM(
+      //     this->get_logger(),
+      //     "serial x " << packet.cmd_vx << " y " << packet.cmd_vy << " xdot "
+      //                 << packet.x_dot << " y_dot " << packet.y_dot
+      //                 << " desire yaw" << packet.desire_yaw);
 
       // RCLCPP_WARN_STREAM(this->get_logger(),"the output is"<<packet.cmd_vx<<"
       // " <<packet.cmd_vy<<" "<< packet.desire_yaw);

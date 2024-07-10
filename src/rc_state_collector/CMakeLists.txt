@@ -16,6 +16,7 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
    src/rc_state_collector.cpp
+   src/rc_mhq.cpp
 )
 # ament_auto_add_library(${PROJECT_NAME} SHARED
 #   DIRECTORY src/rc_state_collector.cpp
@@ -29,6 +30,10 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN rc_state_collector::StateCollectorNode
   EXECUTABLE statecollectorNode)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN rc_state_collector::MHQ_R2
+  EXECUTABLE mhqr2node)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -21,7 +21,7 @@
 #include <thread>
 #include <vector>
 
-#include "rc_interface_msgs/msg/motion.hpp"
+#include "rc_interface_msgs/msg/mhq.hpp"
 #include <geometry_msgs/msg/twist.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <chrono>
@@ -40,7 +40,7 @@ namespace rc_serial_driver
 
         void receiveData();
 
-        void sendData(rc_interface_msgs::msg::Motion::SharedPtr msg);
+        void sendData(rc_interface_msgs::msg::Mhq::SharedPtr msg);
 
         void reopenPort();
 
@@ -71,7 +71,7 @@ namespace rc_serial_driver
         double timestamp_offset_ = 0;
         std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
-        rclcpp::Subscription<rc_interface_msgs::msg::Motion>::SharedPtr
+        rclcpp::Subscription<rc_interface_msgs::msg::Mhq>::SharedPtr
             target_sub_;
 
         // For debug usage

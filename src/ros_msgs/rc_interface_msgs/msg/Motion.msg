@@ -15,5 +15,6 @@ float32 ball_y
 # 1对应找
 # 3对应放球
 int32 arm
+int32 pump
 # 0对应速度模式，1对应位置模式
 int32 mode

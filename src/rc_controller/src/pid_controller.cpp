@@ -282,19 +282,31 @@ void PoseControllerNode::poseUpdate_callback(
       // 杩樺湪璺戠鍥涙绾挎,缁х画锟??
 
     } else {
-      position_mode_.data = 5;
+      position_mode_.data = 7;
     }
   } else if (position_mode_.data == 7) {
-    // double current_thres =
-    //     euclidis(current_x, current_y, 0, desire_pose5_.x, desire_pose5_.y, 0);
-    // RCLCPP_ERROR_STREAM(this->get_logger(),
-    //                     "current thres is " << current_thres);
-    // if (current_thres > euclidisThres_) {
-    //   // 杩樺湪璺戠鍥涙绾挎,缁х画锟??
+        double current_thres =
+        euclidis(current_x, current_y, 0, desire_pose8_.x, desire_pose8_.y, 0);
+    RCLCPP_ERROR_STREAM(this->get_logger(),
+                        "current thres is " << current_thres);
+    if (current_thres > euclidisThres_) {
+      // 杩樺湪璺戠鍥涙绾挎,缁х画锟??
 
-    // } else {
-    //   position_mode_.data = 4;
-    // }
+    } else {
+      position_mode_.data = 8;
+    }
+  }
+  else if (position_mode_.data == 8) {
+        double current_thres =
+        euclidis(current_x, current_y, 0, desire_pose7_.x, desire_pose7_.y, 0);
+    RCLCPP_ERROR_STREAM(this->get_logger(),
+                        "current thres is " << current_thres);
+    if (current_thres > euclidisThres_) {
+      // 杩樺湪璺戠鍥涙绾挎,缁х画锟??
+
+    } else {
+      position_mode_.data = 7;
+    }
   }
 
     current_pose_.x = current_x;

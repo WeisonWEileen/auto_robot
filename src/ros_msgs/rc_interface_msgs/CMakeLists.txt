@@ -15,6 +15,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Motion.msg"
+  "msg/Mhq.msg"
   "srv/InitPos.srv"
 
   DEPENDENCIES
